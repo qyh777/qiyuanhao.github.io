@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产品价格目录 - 快速选品系统（带备注+数量优化）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+        }
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 16px;
+            color: #666;
+        }
+        .search-bar {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+            align-items: center;
+        }
+        .search-bar input {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 18px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            outline: none;
+            transition: border 0.3s;
+        }
+        .search-bar input:focus {
+            border-color: #409eff;
+        }
+        .search-bar select {
+            padding: 12px 18px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            outline: none;
+            cursor: pointer;
+            transition: border 0.3s;
+        }
+        .search-bar select:focus {
+            border-color: #409eff;
+        }
+        /* 已选清单样式调整 */
+        .selection-list {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+        .selection-list h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .selection-list .clear-btn {
+            font-size: 14px;
+            padding: 6px 12px;
+            background-color: #f56c6c;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .selection-list .clear-btn:hover {
+            background-color: #e64949;
+        }
+        .list-empty {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+            font-size: 16px;
+        }
+        .list-items {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .list-item {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 15px;
+            background-color: #f9fafc;
+            border-radius: 6px;
+            border-left: 3px solid #409eff;
+            gap: 10px;
+        }
+        .list-item .product-basic {
+            flex: 1;
+            min-width: 200px;
+        }
+        .list-item .product-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        /* 备注样式优化 - 更显著 */
+        .list-item .product-remark {
+            font-size: 13px;
+            color: #e64949;
+            font-weight: 500;
+            background-color: #fff5f5;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid #fee2e2;
+        }
+        .list-item .product-spec {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 3px;
+        }
+        /* 产品详细信息列 */
+        .list-item .product-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            min-width: 300px;
+        }
+        .list-item .detail-item {
+            font-size: 14px;
+            color: #333;
+            white-space: nowrap;
+        }
+        .list-item .detail-label {
+            color: #666;
+            margin-right: 4px;
+        }
+        /* 清单数量选择器样式 */
+        .list-quantity-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            min-width: 120px;
+        }
+        .list-quantity-btn {
+            width: 28px;
+            height: 28px;
+            border: 1px solid #ddd;
+            background-color: #f5f7fa;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.2s;
+        }
+        .list-quantity-btn:hover {
+            background-color: #409eff;
+            color: #fff;
+            border-color: #409eff;
+        }
+        .list-quantity-input {
+            width: 60px;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.3s;
+        }
+        .list-quantity-input:focus {
+            border-color: #409eff;
+        }
+        /* 操作和金额区域 */
+        .list-item .product-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            min-width: 200px;
+            justify-content: flex-end;
+        }
+        .list-item .product-subtotal {
+            font-size: 14px;
+            color: #333;
+            font-weight: 600;
+        }
+        .list-item .delete-btn {
+            padding: 6px 12px;
+            background-color: #f0f2f5;
+            color: #666;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .list-item .delete-btn:hover {
+            background-color: #f56c6c;
+            color: #fff;
+        }
+        .list-total {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            text-align: right;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        /* 产品表格样式 */
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+        .product-table thead {
+            background-color: #409eff;
+            color: #fff;
+        }
+        .product-table th, .product-table td {
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #eee;
+        }
+        .product-table th {
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .product-table td {
+            font-size: 14px;
+            color: #333;
+        }
+        .product-table tbody tr:hover {
+            background-color: #f8f9fa;
+            cursor: default;
+            transition: background-color 0.2s;
+        }
+        .product-table td:nth-child(4) {
+            text-align: left;
+            padding-left: 20px;
+        }
+        /* 复选框样式 */
+        .checkbox-cell {
+            width: 60px;
+        }
+        .product-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #409eff;
+        }
+        /* 表格数量选择器样式 */
+        .quantity-cell {
+            width: 150px;
+        }
+        .quantity-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+        }
+        .quantity-input {
+            width: 80px;
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.3s;
+        }
+        .quantity-input:focus {
+            border-color: #409eff;
+        }
+        .quantity-input:disabled, .remark-input:disabled {
+            background-color: #f5f7fa;
+            color: #999;
+            cursor: not-allowed;
+        }
+        .quantity-btn {
+            width: 28px;
+            height: 28px;
+            border: 1px solid #ddd;
+            background-color: #f5f7fa;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.2s;
+        }
+        .quantity-btn:hover:not(:disabled) {
+            background-color: #409eff;
+            color: #fff;
+            border-color: #409eff;
+        }
+        .quantity-btn:disabled {
+            color: #ccc;
+            cursor: not-allowed;
+            background-color: #fafafa;
+        }
+        /* 备注栏样式 */
+        .remark-cell {
+            width: 200px;
+        }
+        .remark-input {
+            width: 180px;
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.3s;
+        }
+        .remark-input:focus {
+            border-color: #409eff;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 768px) {
+            .product-table {
+                display: block;
+                overflow-x: auto;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+            .search-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-bar input, .search-bar select {
+                min-width: 100%;
+            }
+            .list-item .product-details {
+                min-width: 100%;
+                gap: 10px;
+            }
+            .list-item .product-actions {
+                min-width: 100%;
+                justify-content: flex-start;
+            }
+            .list-item .detail-item {
+                white-space: normal;
+                width: 45%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>产品价格目录 - 快速选品系统</h1>
+        <p>支持搜索/排序/多数量选品+备注，自动生成选品清单</p>
+    </div>
+
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="输入产品名/口味/规格搜索（如：猫爪糕、鸭脖、慕斯）">
+        <select id="sortSelect" onchange="sortTable()">
+            <option value="index">按产品序号排序</option>
+            <option value="price-asc">按单价（元/箱）升序</option>
+            <option value="price-desc">按单价（元/箱）降序</option>
+        </select>
+    </div>
+
+    <!-- 已选产品清单 -->
+    <div class="selection-list" id="selectionList">
+        <h2>
+            已选产品清单
+            <button class="clear-btn" onclick="clearSelection()">清空清单</button>
+        </h2>
+        <div class="list-empty" id="listEmpty">
+            暂无选中产品，请勾选左侧产品加入清单
+        </div>
+        <div class="list-items" id="listItems"></div>
+        <div class="list-total" id="listTotal">
+            合计金额：¥0.00
+        </div>
+    </div>
+
+    <table class="product-table" id="productTable">
+        <thead>
+            <tr>
+                <th class="checkbox-cell">选择</th>
+                <th>序号</th>
+                <th>产品名称（口味）</th>
+                <th>规格</th>
+                <th>单价（元/箱）</th>
+                <th>数量/箱</th>
+                <th>进价</th>
+                <th>选购数量</th>
+                <th class="remark-cell">备注</th>
+            </tr>
+        </thead>
+        <tbody id="productTableBody">
+            <!-- 产品数据由JS自动渲染 -->
+        </tbody>
+    </table>
+
+    <script>
+        // 产品原始数据
+        const productData = [
+           {index:1, name:"猫爪糕（玉米味 / 黑米味）", spec:"1kg8 袋 ", price:115, boxCount:"16 斤 ", purchasePrice:"7.18 元 / 斤 "},
+{index:2, name:"香酥饼（香葱牛肉）", spec:"120g336 袋 ", price:180, boxCount:"108 个 ", purchasePrice:"6.9 元 / 斤 "},
+{index:3, name:"发面馅饼（奥尔良鸡肉）", spec:"130g10 片8 袋 ", price:120, boxCount:"80 片 ", purchasePrice:"5.77 元 / 斤 "},
+{index:4, name:"H8 寸卷饼", spec:"16 片12 包 ", price:70, boxCount:"192 片 ", purchasePrice:"5.83 元 / 包 "},
+{index:5, name:"手工奥尔良鸡肉饭团", spec:"150g8 个10 袋 ", price:125, boxCount:"80 个 ", purchasePrice:"1.56 元 / 个 "},
+{index:6, name:"T 原味馒头", spec:"120g80 个 ", price:55, boxCount:"80 个 ", purchasePrice:"0.68 元 / 个 "},
+{index:7, name:"T 南瓜馒头", spec:"120g80 个 ", price:55, boxCount:"80 个 ", purchasePrice:"0.68 元 / 个 "},
+{index:8, name:"T 花卷", spec:"120g80 个 ", price:76, boxCount:"80 个 ", purchasePrice:"0.95 元 / 个 "},
+{index:9, name:"T 迷你熔岩（巧克力）", spec:"300g10 盒 ", price:134, boxCount:"10 盒 ", purchasePrice:"13.4 元 / 盒 "},
+{index:10, name:"T 脆皮梦龙麻薯（抹茶）", spec:"350g10 盒 ", price:120, boxCount:"10 盒 ", purchasePrice:"12 元 / 盒 "},
+{index:11, name:"T 卡通慕斯（熊猫抱竹）", spec:"10 枚10 盒 ", price:85, boxCount:"100 枚 ", purchasePrice:"8.5 元 / 盒 "},
+{index:12, name:"T 红丝绒慕斯蛋糕直三角", spec:"12 块9 盒 ", price:95, boxCount:"9 盒 ", purchasePrice:"10.6 元 / 盒 "},
+{index:13, name:"T 提拉米苏慕斯蛋糕直三角", spec:"12 块9 盒 ", price:95, boxCount:"9 盒 ", purchasePrice:"10.6 元 / 盒 "},
+{index:14, name:"T 卡通慕斯（酸奶月兔）", spec:"26g10 枚10 盒 ", price:75, boxCount:"100 枚 ", purchasePrice:"0.75 元 / 个 "},
+{index:15, name:"HS 酱鸭架", spec:"15kg", price:435, boxCount:"30 斤", purchasePrice:"14.5 元 / 斤"},
+{index:16, name:"HS 麻辣鸭架", spec:"15kg", price:375, boxCount:"30 斤", purchasePrice:"12.5 元 / 斤"},
+{index:17, name:"HS 酱鸭脖", spec:"15kg", price:435, boxCount:"30 斤", purchasePrice:"14.5 元 / 斤"},
+{index:18, name:"HS 麻辣鸭脖", spec:"15kg", price:375, boxCount:"30 斤", purchasePrice:"12.5 元 / 斤"},
+{index:19, name:"麻辣生蚝肉", spec:"2.5kg6", price:788, boxCount:"30 斤 ", purchasePrice:"26.3 元 / 斤 "},
+{index:20, name:"麻辣大鱿鱼 30 斤", spec:"30 斤 / 箱", price:525, boxCount:"30 斤", purchasePrice:"17.5 元 / 斤"},
+{index:21, name:"Q 咔滋脆鸡排（香辣）", spec:"10kg（100g / 片）", price:150, boxCount:"20 斤", purchasePrice:"7.5 元 / 斤"},
+{index:22, name:"Y 牙签肉", spec:"1kg8 袋 ", price:145, boxCount:"16 斤 ", purchasePrice:"9 元 / 斤 "},
+{index:23, name:"众品脆皮烤肠（原味）", spec:"70g10 根20 袋 ", price:265, boxCount:"200 根 ", purchasePrice:"1.325 元 / 根 "},
+{index:24, name:"众品脆皮烤肠（黑胡椒）", spec:"70g10 根20 袋 ", price:265, boxCount:"200 根 ", purchasePrice:"1.325 元 / 根 "},
+{index:25, name:"HS 扣碗排骨", spec:"150g24 碗 ", price:228, boxCount:"24 碗 ", purchasePrice:"9.5 元 / 碗 "},
+{index:26, name:"HS 梅菜扣肉", spec:"150g24 碗 ", price:228, boxCount:"24 碗 ", purchasePrice:"9.5 元 / 碗 "},
+{index:27, name:"100g 大油条（约 31-32 公分）", spec:"100g10 根10 袋 ", price:68, boxCount:"100 个 ", purchasePrice:"0.68 元 / 个 "},
+{index:28, name:"玉米锅贴馒头", spec:"120g10 个6 袋 ", price:75, boxCount:"60 个 ", purchasePrice:"1.25 元 / 个 "},
+{index:29, name:"黑豆锅贴馒头", spec:"120g10 个6 袋 ", price:87, boxCount:"60 个 ", purchasePrice:"1.45 元 / 个 "},
+{index:30, name:"荠菜锅贴馒头", spec:"120g10 个6 袋 ", price:80, boxCount:"60 个 ", purchasePrice:"1.333333 元 / 个 "},
+{index:31, name:"双色豆包", spec:"150g6 个10 袋 ", price:106, boxCount:"60 个 ", purchasePrice:"1.766667 元 / 个 "},
+{index:32, name:"菜团子（小白菜 / 酸菜 / 雪菜）", spec:"100g6 个10 袋 ", price:85, boxCount:"60 个 ", purchasePrice:"1.416667 元 / 个 "},
+{index:33, name:"豆沙油酥烧饼", spec:"130g4 个16 袋 ", price:96, boxCount:"64 个 ", purchasePrice:"1.5 元 / 个 "},
+{index:34, name:"纸皮蒸煎饺（猪肉玉米 / 猪肉白菜 / 猪肉韭菜 / 黑胡椒牛肉 / 猪肉荠菜）", spec:"1kg10 袋 ", price:98, boxCount:"20 斤 ", purchasePrice:"4.9 元 / 斤 "},
+{index:35, name:"香酥翠叶", spec:"108g (22 片)16 袋 ", price:120, boxCount:"16 袋 ", purchasePrice:"7.5 元 / 袋 "},
+{index:36, name:"元宵（黑芝麻 / 山楂 / 五仁）", spec:"2500g4 袋 ", price:170, boxCount:"20 斤 ", purchasePrice:"8.5 元 / 斤 "},
+{index:37, name:"南瓜包（大包装）", spec:"1.5kg4 袋（个重约 33g）", price:80, boxCount:"187 个 ", purchasePrice:"0.42 元 / 个 "},
+{index:38, name:"猪猪包（大包装）", spec:"1.5kg4 袋（个重约 33g）", price:80, boxCount:"187 个 ", purchasePrice:"0.42 元 / 个 "},
+{index:39, name:"鸡仔包（大包装）", spec:"1.5kg4 袋（个重约 33g）", price:80, boxCount:"187 个 ", purchasePrice:"0.42 元 / 个 "},
+{index:40, name:"愤怒的小鸟（大包装）", spec:"1.5kg4 袋（个重约 33g）", price:80, boxCount:"187 个 ", purchasePrice:"0.42 元 / 个 "},
+{index:41, name:"小黄人（大包装）", spec:"1.5kg4 袋（个重约 33g）", price:80, boxCount:"187 个 ", purchasePrice:"0.42 元 / 个 "},
+{index:42, name:"小蜜蜂（大包装）", spec:"1.5kg4 袋（个重约 33g）", price:80, boxCount:"187 个 ", purchasePrice:"0.42 元 / 个 "},
+{index:43, name:"玉兔包（大包装）", spec:"1.5kg4 袋（个重约 33g）", price:80, boxCount:"187 个 ", purchasePrice:"0.42 元 / 个 "},
+{index:44, name:"老虎包（大包装）", spec:"1.5kg4 袋（个重 33g）", price:85, boxCount:"187 个 ", purchasePrice:"0.45 元 / 个 "},
+{index:45, name:"KT 猫（大包装）", spec:"1.5kg4 袋（个重约 33g）", price:80, boxCount:"187 个 ", purchasePrice:"0.42 元 / 个 "},
+{index:46, name:"大黄鸭（大包装）", spec:"1.5kg4 袋（个重约 38g）", price:90, boxCount:"157 个 ", purchasePrice:"0.57 元 / 个 "},
+{index:47, name:"草莓熊（大包装）", spec:"1.5kg4 袋（个重约 33g）", price:80, boxCount:"200 个 ", purchasePrice:"0.4 元 / 个 "},
+{index:48, name:"草莓包（大包装）", spec:"1.5kg4 袋（个重约 33g）", price:80, boxCount:"200 个 ", purchasePrice:"0.4 元 / 个 "},
+{index:49, name:"熊仔包（大包装）", spec:"1.5kg4 袋（个重约 33g）", price:80, boxCount:"187 个 ", purchasePrice:"0.42 元 / 个 "},
+{index:50, name:"熊宝宝（大包装）", spec:"1.5kg4 袋（个重约 63-65g）", price:90, boxCount:"100 个 ", purchasePrice:"0.9 元 / 个 "},
+{index:51, name:"奥特曼（大包装）", spec:"1.5kg4 袋（个重约 63-65g）", price:90, boxCount:"100 个 ", purchasePrice:"0.9 元 / 个 "},
+{index:52, name:"吉祥鼠（大包装）", spec:"1.5kg4 袋（个重约 38g）", price:90, boxCount:"100 个 ", purchasePrice:"0.9 元 / 个 "},
+{index:53, name:"卡通 kt 猫公仔包（大包装）", spec:"1.5kg4 袋（个重约 63-65g）", price:90, boxCount:"100 个 ", purchasePrice:"0.9 元 / 个 "},
+{index:54, name:"山竹包（大包装）", spec:"1.5kg4 袋（个重约 33g）", price:80, boxCount:"187 个 ", purchasePrice:"0.42 元 / 个 "},
+{index:55, name:"唐老鸭（大包装）", spec:"1.5kg4 袋 ", price:80, boxCount:"187 个 ", purchasePrice:"0.42 元 / 个 "},
+{index:56, name:"合祎卡通雪人包", spec:"1.5kg4 袋（个重约 63-65g）", price:90, boxCount:"100 个 ", purchasePrice:"0.9 元 / 个 "},
+{index:57, name:"我命由我不由天", spec:"330g10 包 ", price:70, boxCount:"100 个 ", purchasePrice:"0.7 元 / 个 "},
+{index:58, name:"果蔬卡通热狗卷", spec:"85g4 个25 袋 ", price:120, boxCount:"100 个 ", purchasePrice:"1.2 元 / 个 "},
+{index:59, name:"圣诞快乐", spec:"330g10 包 ", price:60, boxCount:"100 个 ", purchasePrice:"0.6 元 / 个 "},
+{index:60, name:"田园风光", spec:"330 克10 包 ", price:60, boxCount:"100 个 ", purchasePrice:"0.6 元 / 个 "},
+{index:61, name:"马上有钱", spec:"330 克10 包 ", price:70, boxCount:"100 个 ", purchasePrice:"0.7 元 / 个 "},
+{index:62, name:"萌宝超能", spec:"330g10 袋 ", price:55, boxCount:"100 个 ", purchasePrice:"0.55 元 / 个 "},
+{index:63, name:"果蔬膳食", spec:"330g10 袋 ", price:55, boxCount:"100 个 ", purchasePrice:"0.55 元 / 个 "},
+{index:64, name:"冰雪相融", spec:"330g10 袋 ", price:55, boxCount:"100 个 ", purchasePrice:"0.55 元 / 个 "},
+{index:65, name:"萌宠联盟", spec:"1330g10 袋 ", price:55, boxCount:"100 个 ", purchasePrice:"0.55 元 / 个 "},
+{index:66, name:"呆萌蛋宝", spec:"1330g10 袋 ", price:55, boxCount:"100 个 ", purchasePrice:"0.55 元 / 个 "},
+{index:67, name:"萌虎归来", spec:"330g10 袋 ", price:55, boxCount:"100 个 ", purchasePrice:"0.55 元 / 个 "},
+{index:68, name:"熊返地球", spec:"330g10 袋 ", price:55, boxCount:"100 个 ", purchasePrice:"0.55 元 / 个 "},
+{index:69, name:"达菲家族", spec:"330g10 袋 ", price:55, boxCount:"100 个 ", purchasePrice:"0.55 元 / 个 "},
+{index:70, name:"玉兔吉祥", spec:"330g10 袋 ", price:55, boxCount:"100 个 ", purchasePrice:"0.55 元 / 个 "},
+{index:71, name:"交通英雄", spec:"330g10 袋 ", price:60, boxCount:"100 个 ", purchasePrice:"0.6 元 / 个 "},
+{index:72, name:"龙年好柿发生", spec:"330g10 袋 ", price:65, boxCount:"100 个 ", purchasePrice:"0.65 元 / 个 "},
+{index:73, name:"蛇年暴富", spec:"330g10 袋 ", price:70, boxCount:"100 个 ", purchasePrice:"0.7 元 / 个 "},
+{index:74, name:"精灵布布", spec:"200g12 袋 ", price:65, boxCount:"72 个 ", purchasePrice:"0.9 元 / 个 "},
+{index:75, name:"童画西游", spec:"300g12 盒 ", price:80, boxCount:"60 个 ", purchasePrice:"1.3 元 / 个 "},
+{index:76, name:"金鼠招财包", spec:"320g10 包 ", price:72, boxCount:"80 枚 ", purchasePrice:"0.9 元 / 枚 "},
+{index:77, name:"猬风而来包", spec:"360g10 包 ", price:96, boxCount:"80 枚 ", purchasePrice:"1.2 元 / 枚 "},
+{index:78, name:"萌熊对对碰（新）", spec:"400g10 包 ", price:135, boxCount:"80 枚 ", purchasePrice:"1.6875 元 / 枚 "},
+{index:79, name:"迷你猴", spec:"300g10 包 ", price:60, boxCount:"100 枚 ", purchasePrice:"0.6 元 / 枚 "},
+{index:80, name:"包你鹅乐包", spec:"400g10 包 ", price:120, boxCount:"100 枚 ", purchasePrice:"1.2 元 / 枚 "},
+{index:81, name:"萌犬大哈", spec:"350g10 包 ", price:130, boxCount:"100 枚 ", purchasePrice:"1.3 元 / 枚 "},
+{index:82, name:"萌熊对对碰", spec:"400g8 包 ", price:135, boxCount:"64 枚 ", purchasePrice:"2.1 元 / 枚 "},
+{index:83, name:"大黄鸭", spec:"450g10 包 ", price:130, boxCount:"100 枚 ", purchasePrice:"1.3 元 / 枚 "},
+{index:84, name:"嗡嗡小蜜蜂", spec:"330g10 包 ", price:125, boxCount:"100 枚 ", purchasePrice:"1.25 元 / 枚 "},
+{index:85, name:"多啦 A 猫", spec:"330g10 包 ", price:120, boxCount:"100 枚 ", purchasePrice:"1.2 元 / 枚 "},
+{index:86, name:"喜羊羊", spec:"350g10 包 ", price:120, boxCount:"100 枚 ", purchasePrice:"1.2 元 / 枚 "},
+{index:87, name:"黄金咕咕鸡", spec:"400g10 包 ", price:120, boxCount:"100 枚 ", purchasePrice:"1.2 元 / 枚 "},
+{index:88, name:"同款 KT 猫", spec:"330g10 包 ", price:120, boxCount:"100 枚 ", purchasePrice:"1.2 元 / 枚 "},
+{index:89, name:"同款猪猪包", spec:"360g15 包 ", price:105, boxCount:"180 枚 ", purchasePrice:"0.58 元 / 枚 "},
+{index:90, name:"跳跳虎", spec:"330g10 包 ", price:120, boxCount:"100 枚 ", purchasePrice:"1.2 元 / 枚 "},
+{index:91, name:"彩虹龙猫包", spec:"330g10 包 ", price:125, boxCount:"100 枚 ", purchasePrice:"1.25 元 / 枚 "},
+{index:92, name:"奶黄猪", spec:"360g10 包 ", price:90, boxCount:"120 枚 ", purchasePrice:"0.75 元 / 枚 "},
+{index:93, name:"果蔬一口馍", spec:"18kg（个重约 7-10g）", price:85, boxCount:"16 斤 ", purchasePrice:"5.31 元 / 斤 "},
+{index:94, name:"炫彩小馒头", spec:"500g20 袋 ", price:90, boxCount:"20 斤 ", purchasePrice:"4.5 元 / 斤 "},
+{index:95, name:"南瓜馒头", spec:"100g100 个 ", price:49, boxCount:"100 个 ", purchasePrice:"0.49 元 / 个 "},
+{index:96, name:"黑米馒头", spec:"100g100 个 ", price:49, boxCount:"100 个 ", purchasePrice:"0.49 元 / 个 "},
+{index:97, name:"原味馒头", spec:"100g100 个 ", price:49, boxCount:"100 个 ", purchasePrice:"0.49 元 / 个 "},
+{index:98, name:"紫薯双色小馒头", spec:"1kg6 袋 ", price:60, boxCount:"12 斤 ", purchasePrice:"5 元 / 斤 "},
+{index:99, name:"奶香小馒头", spec:"1kg6 袋 ", price:60, boxCount:"12 斤 ", purchasePrice:"5 元 / 斤 "},
+{index:100, name:"黑米小馒头", spec:"1kg6 袋 ", price:60, boxCount:"12 斤 ", purchasePrice:"5 元 / 斤 "},
+{index:101, name:"红糖手撕馒头", spec:"540g10 袋 ", price:65, boxCount:"10.8 斤 ", purchasePrice:"6 元 / 斤 "},
+{index:102, name:"紫薯开花馒头", spec:"480g16 包 ", price:70, boxCount:"96 个 ", purchasePrice:"0.72 元 / 个 "},
+{index:103, name:"南瓜开花馒头", spec:"480g16 包 ", price:70, boxCount:"96 个 ", purchasePrice:"0.72 元 / 个 "},
+{index:104, name:"红糖开花馒头", spec:"480g16 包 ", price:70, boxCount:"96 个 ", purchasePrice:"0.72 元 / 个 "},
+{index:105, name:"玫瑰开花馒头", spec:"480g16 包 ", price:70, boxCount:"96 个 ", purchasePrice:"0.72 元 / 个 "},
+{index:106, name:"抹茶开花馒头", spec:"480g16 包 ", price:70, boxCount:"96 个 ", purchasePrice:"0.72 元 / 个 "},
+{index:107, name:"花开富贵", spec:"360g12 袋 ", price:55, boxCount:"120 个 ", purchasePrice:"0.46 元 / 个 "},
+{index:108, name:"双色荷叶饼", spec:"460g10 袋 ", price:38, boxCount:"200 个 ", purchasePrice:"0.19 元 / 个 "},
+{index:109, name:"白荷叶饼", spec:"460g10 袋 ", price:34, boxCount:"200 个 ", purchasePrice:"0.17 元 / 个 "},
+{index:110, name:"小窝窝头（玉米 / 菠菜 / 紫薯 / 全麦 / 南瓜 / 高粱）", spec:"1.5kg4 袋（个重 43g）", price:56, boxCount:"12 斤 ", purchasePrice:"4.6 元 / 斤 "},
+{index:111, name:"小窝窝头（红枣 / 荞麦 / 胡萝卜 / 黑米）", spec:"1.5kg4 袋（个重 43g）", price:56, boxCount:"12 斤 ", purchasePrice:"4.6 元 / 斤 "},
+{index:112, name:"窝窝头（三合面 / 黑豆面 / 小米面）", spec:"115g100 个 ", price:128, boxCount:"23 斤 ", purchasePrice:"5.5 元 / 斤 "},
+{index:113, name:"窝窝头（荠菜椒盐 / 桑芽椒盐）", spec:"115g100 个 ", price:138, boxCount:"23 斤 ", purchasePrice:"6 元 / 斤 "},
+{index:114, name:"窝窝头（红枣枸杞）", spec:"115g100 个 ", price:148, boxCount:"23 斤 ", purchasePrice:"6.4 元 / 斤 "},
+{index:115, name:"红枣窝头（大黄米 / 糯米 / 紫薯）", spec:"100g×10 个 ×10 包 / 箱", price:100, boxCount:"100 个", purchasePrice:"1 元 / 个"},
+{index:116, name:"粘豆包（红 / 紫 / 黑 / 绿 / 黄）", spec:"100g10 个12 袋 ", price:150, boxCount:"120 个 ", purchasePrice:"1.25 元 / 个 "},
+{index:117, name:"玉米锅贴馒头", spec:"120g10 个6 袋 ", price:75, boxCount:"60 个 ", purchasePrice:"1.25 元 / 个 "},
+{index:118, name:"黑豆锅贴馒头", spec:"120g10 个6 袋 ", price:87, boxCount:"60 个 ", purchasePrice:"1.45 元 / 个 "},
+{index:119, name:"菜团子（小白菜 / 酸菜 / 雪菜）", spec:"100g6 个10 袋 ", price:85, boxCount:"60 个 ", purchasePrice:"1.416667 元 / 个 "},
+{index:120, name:"手工爆浆红糖卷", spec:"540gx20 包（6 个）", price:90, boxCount:"120 个", purchasePrice:"0.75 元 / 个"},
+{index:121, name:"玉米粑粑", spec:"2.5kg4 袋 ", price:90, boxCount:"125 个 ", purchasePrice:"0.72 元 / 个 "},
+{index:122, name:"鲜浆玉米粑粑", spec:"1.5 公斤4 袋 ", price:98, boxCount:"120 个 ", purchasePrice:"0.81 元 / 个 "},
+{index:123, name:"水磨玉米糕", spec:"2.5kg4 袋 ", price:110, boxCount:"150 个 ", purchasePrice:"0.73 元 / 个 "},
+{index:124, name:"合祎玉米杂粮粑粑", spec:"80g12 个10 袋 ", price:132, boxCount:"120 个 ", purchasePrice:"1.1 元 / 个 "},
+{index:125, name:"合祎玉米粑粑 (甜筒造型)", spec:"80g12 个10 袋 ", price:132, boxCount:"120 个 ", purchasePrice:"1.1 元 / 个 "},
+{index:126, name:"合祎玉米杂粮方糕", spec:"90g12 个10 袋 ", price:132, boxCount:"120 个 ", purchasePrice:"1.1 元 / 个 "},
+{index:127, name:"红糖大枣粑粑", spec:"2.5kg4 袋（个重 80g）", price:90, boxCount:"125 个 ", purchasePrice:"0.72 元 / 个 "},
+{index:128, name:"玉米红豆卷", spec:"2.5kg4 袋 ", price:80, boxCount:"125 个 ", purchasePrice:"0.64 元 / 个 "},
+{index:129, name:"紫薯红豆卷", spec:"2.5kg4 袋 ", price:80, boxCount:"125 个 ", purchasePrice:"0.64 元 / 个 "},
+{index:130, name:"鲜南瓜红豆卷卷", spec:"2kg4（80g100）", price:80, boxCount:"100 个 ", purchasePrice:"0.8 元 / 个 "},
+{index:131, name:"鲜菠菜红豆双色卷卷", spec:"2kg4（80g100）", price:80, boxCount:"100 个 ", purchasePrice:"0.8 元 / 个 "},
+{index:132, name:"紫薯牛奶卷卷", spec:"2kg4（80g100）", price:80, boxCount:"100 个 ", purchasePrice:"0.8 元 / 个 "},
+{index:133, name:"香蕉奶露包", spec:"230g15 包（一包 6 个）", price:105, boxCount:"90 枚 ", purchasePrice:"1.17 元 / 枚 "},
+{index:134, name:"七彩燕麦包", spec:"480g16 袋 ", price:80, boxCount:"96 个 ", purchasePrice:"0.83 元 / 个 "},
+{index:135, name:"紫薯包", spec:"480g16 袋 ", price:80, boxCount:"96 个 ", purchasePrice:"0.83 元 / 个 "},
+{index:136, name:"椰奶包", spec:"480g16 袋 ", price:75, boxCount:"96 个 ", purchasePrice:"0.78 元 / 个 "},
+{index:137, name:"雪花流沙包", spec:"480g16 袋 ", price:80, boxCount:"96 个 ", purchasePrice:"0.83 元 / 个 "},
+{index:138, name:"红枣酸奶包", spec:"480g16 袋 ", price:75, boxCount:"96 个 ", purchasePrice:"0.78 元 / 个 "},
+{index:139, name:"奶香玉米包", spec:"480g16 袋 ", price:75, boxCount:"96 个 ", purchasePrice:"0.78 元 / 个 "},
+{index:140, name:"双色豆包", spec:"150g6 个10 袋 ", price:106, boxCount:"60 个 ", purchasePrice:"1.766667 元 / 个 "},
+{index:141, name:"玉米热狗卷", spec:"480g16 袋 ", price:80, boxCount:"96 个 ", purchasePrice:"0.83 元 / 个 "},
+{index:142, name:"荠菜鸡蛋薄皮素包", spec:"500g20 包 ", price:110, boxCount:"20 斤 ", purchasePrice:"5.5 元 / 斤 "},
+{index:143, name:"千层蒸煎包", spec:"1.5kg4 袋 ", price:70, boxCount:"12 斤 ", purchasePrice:"5.8 元 / 斤 "},
+{index:144, name:"手工老面小笼包（鲜肉）", spec:"1kg6 袋（25g）", price:85, boxCount:"12 斤 ", purchasePrice:"7.083333 元 / 斤 "},
+{index:145, name:"手工老面小笼包（嵊州风味）", spec:"1kg10（25g / 个）", price:168, boxCount:"20 斤 ", purchasePrice:"8.4 元 / 斤 "},
+{index:146, name:"合祎手工老面鲜肉小笼包", spec:"1kg10 袋（25g / 个）", price:130, boxCount:"20 斤 ", purchasePrice:"6.5 元 / 斤 "},
+{index:147, name:"纯手工鲜肉包 / 纯手工酱肉包", spec:"100g20 个4 袋 ", price:96, boxCount:"80 个 ", purchasePrice:"1.2 元 / 个 "},
+{index:148, name:"纯手工韭菜鸡蛋包 / 纯手工香辣雪菜包 / 纯手工麻辣豆腐包", spec:"100g20 个4 袋 ", price:96, boxCount:"80 个 ", purchasePrice:"1.2 元 / 个 "},
+{index:149, name:"纯手工青椒茄子包 / 纯手工胡萝卜鸡蛋包", spec:"100g105 个 ", price:125, boxCount:"105 个 ", purchasePrice:"1.19 元 / 个 "},
+{index:150, name:"手工豆沙包", spec:"100g20 个4 袋 ", price:96, boxCount:"80 个 ", purchasePrice:"1.2 元 / 个 "},
+{index:151, name:"手工东北酸菜包 / 手工老坛酸菜包 / 手工梅干菜猪肉包", spec:"100g20 个4 袋 ", price:96, boxCount:"80 个 ", purchasePrice:"1.2 元 / 个 "},
+{index:152, name:"80g 酱肉包", spec:"80g100 个 ", price:70, boxCount:"100 个 ", purchasePrice:"0.7 元 / 个 "},
+{index:153, name:"80g 梅干菜包", spec:"80g100 个 ", price:70, boxCount:"100 个 ", purchasePrice:"0.7 元 / 个 "},
+{index:154, name:"尖椒火腿包 80 克", spec:"80g10 个10 包 ", price:98, boxCount:"100 个 ", purchasePrice:"0.98 元 / 个 "},
+{index:155, name:"酱香牛肉包 80 克", spec:"80g10 个10 包 ", price:110, boxCount:"100 个 ", purchasePrice:"1.1 元 / 个 "},
+{index:156, name:"鲜汁大肉包 80 克", spec:"80g10 个10 包 ", price:89, boxCount:"100 个 ", purchasePrice:"0.89 元 / 个 "},
+{index:157, name:"奥尔良鸡肉包 80 克", spec:"80g10 个10 包 ", price:89, boxCount:"100 个 ", purchasePrice:"0.89 元 / 个 "},
+{index:158, name:"酱香大肉包 80 克", spec:"80g10 个10 包 ", price:89, boxCount:"100 个 ", purchasePrice:"0.89 元 / 个 "},
+{index:159, name:"香菇青菜包 80 克", spec:"80g10 个10 包 ", price:89, boxCount:"100 个 ", purchasePrice:"0.89 元 / 个 "},
+{index:160, name:"鲜风同款牛肉金丝卷", spec:"80g10 个10 包 ", price:90, boxCount:"100 个 ", purchasePrice:"0.9 元 / 个 "},
+{index:161, name:"手工果蔬花卷", spec:"800g10 包 ", price:85, boxCount:"100 个 ", purchasePrice:"0.85 元 / 个 "},
+{index:162, name:"手工葱香花卷", spec:"2.5kg4 袋 ", price:70, boxCount:"100 个 ", purchasePrice:"0.7 元 / 个 "},
+{index:163, name:"手工火腿花卷", spec:"2.5kg4 袋 ", price:70, boxCount:"100 个 ", purchasePrice:"0.7 元 / 个 "},
+{index:164, name:"手工肉松花卷", spec:"2.5kg4 袋 ", price:70, boxCount:"100 个 ", purchasePrice:"0.7 元 / 个 "},
+{index:165, name:"手工香辣花卷", spec:"2.5kg4 袋 ", price:70, boxCount:"100 个 ", purchasePrice:"0.7 元 / 个 "},
+{index:166, name:"樱花糕", spec:"480g15 袋 ", price:90, boxCount:"90 个 ", purchasePrice:"1 元 / 个 "},
+{index:167, name:"蔓越莓糕", spec:"1kg8 袋（个重约 33g）", price:135, boxCount:"240 个 ", purchasePrice:"0.56 元 / 个 "},
+{index:168, name:"黄金枸杞糕 爱心", spec:"1000g8 袋 ", price:88, boxCount:"16 斤 ", purchasePrice:"5.5 元 / 斤 "},
+{index:169, name:"白糖桂花糕 爱心", spec:"1000g8 袋 ", price:88, boxCount:"16 斤 ", purchasePrice:"5.5 元 / 斤 "},
+{index:170, name:"合祎红糖马拉糕", spec:"1.26kg / 袋8 袋 / 箱 ", price:75, boxCount:"96 个 ", purchasePrice:"0.78 元 / 个 "},
+{index:171, name:"合祎紫薯马拉糕", spec:"1.26kg / 袋8 袋 / 箱 ", price:75, boxCount:"96 个 ", purchasePrice:"0.78 元 / 个 "},
+{index:172, name:"合祎南瓜马拉糕", spec:"1.26kg / 袋8 袋 / 箱 ", price:75, boxCount:"96 个 ", purchasePrice:"0.78 元 / 个 "},
+{index:173, name:"合祎奶香马拉糕", spec:"1.26kg / 袋8 袋 / 箱 ", price:75, boxCount:"96 个 ", purchasePrice:"0.78 元 / 个 "},
+{index:174, name:"合祎黑米马拉糕", spec:"1.26kg / 袋8 袋 / 箱 ", price:75, boxCount:"96 个 ", purchasePrice:"0.78 元 / 个 "},
+{index:175, name:"金玉满堂", spec:"300g20 袋 ", price:80, boxCount:"12 斤 ", purchasePrice:"6.66 元 / 斤 "},
+{index:176, name:"甜甜圈（玉米 / 紫薯 / 奶香 / 红糖）", spec:"116 袋540g", price:80, boxCount:"96 个 ", purchasePrice:"0.83 元 / 个 "},
+{index:177, name:"白糖方糕（有桂花）", spec:"15 包6 个90 克 ", price:90, boxCount:"90 个 ", purchasePrice:"1 元 / 个 "},
+{index:178, name:"红糖方糕", spec:"540g16 袋 ", price:70, boxCount:"96 个 ", purchasePrice:"0.73 元 / 个 "},
+{index:179, name:"玉米方糕", spec:"540g16 袋 ", price:70, boxCount:"96 个 ", purchasePrice:"0.73 元 / 个 "},
+{index:180, name:"红糖发糕（圆）", spec:"400g16 个 ", price:60, boxCount:"16 个 ", purchasePrice:"3.75 元 / 斤 "},
+{index:181, name:"QQ 糕桂花", spec:"11.4kg5 包 ", price:110, boxCount:"14 斤 ", purchasePrice:"7.85 元 / 斤 "},
+{index:182, name:"QQ 糕玉米", spec:"35g40 个5 包 ", price:110, boxCount:"200 个 ", purchasePrice:"0.55 元 / 个 "},
+{index:183, name:"白米切糕 / 黑米切糕", spec:"150g20 个5 袋 ", price:150, boxCount:"100 个 ", purchasePrice:"1.5 元 / 个 "},
+{index:184, name:"糯米糕（黑香米 / 红糖红豆）", spec:"1000g10 包 ", price:100, boxCount:"100 根 ", purchasePrice:"1 元 / 个 "},
+{index:185, name:"糯米糕（蜜枣 / 蔓越莓）", spec:"1000g10 包 ", price:100, boxCount:"100 根 ", purchasePrice:"1 元 / 个 "},
+{index:186, name:"糯米糕（猕猴桃）", spec:"1000g10 包 ", price:100, boxCount:"100 根 ", purchasePrice:"1 元 / 个 "},
+{index:187, name:"烧麦", spec:"50g约 20 个（1kg）10 袋 ", price:90, boxCount:"200 个 ", purchasePrice:"0.45 元 / 个 "},
+{index:188, name:"香菇鲜肉糯米烧麦（手工）", spec:"3.45kg4 袋（70g / 个）", price:105, boxCount:"197 个 ", purchasePrice:"0.53 元 / 个 "},
+{index:189, name:"蛋黄烧麦", spec:"80g10 个10 袋 ", price:100, boxCount:"100 个 ", purchasePrice:"1 元 / 个 "},
+{index:190, name:"纸皮烧麦（原味 / 芝士 / 蛋黄）", spec:"240g30 袋（个重约 60g）", price:105, boxCount:"120 个 ", purchasePrice:"0.87 元 / 个 "},
+{index:191, name:"蒸土豆丝", spec:"2000 克5 袋 ", price:98, boxCount:"20 斤 ", purchasePrice:"4.9 元 / 斤 "},
+{index:192, name:"蒸胡萝卜丝", spec:"2000 克5 袋 ", price:98, boxCount:"20 斤 ", purchasePrice:"4.9 元 / 斤 "},
+{index:193, name:"蒸豆角", spec:"2000 克5 袋 ", price:106, boxCount:"20 斤 ", purchasePrice:"5.3 元 / 斤 "},
+{index:194, name:"蒸心里美萝卜", spec:"2000 克5 袋 ", price:106, boxCount:"20 斤 ", purchasePrice:"5.3 元 / 斤 "},
+{index:195, name:"猪肉豆角焖面", spec:"450g24 袋 ", price:130, boxCount:"24 袋 ", purchasePrice:"5.4 元 / 袋 "},
+{index:196, name:"双椒鸡肉焖面", spec:"450g24 袋 ", price:130, boxCount:"24 袋 ", purchasePrice:"5.4 元 / 袋 "},
+{index:197, name:"藤椒鸡柳焖面", spec:"450g24 袋 ", price:130, boxCount:"24 袋 ", purchasePrice:"5.4 元 / 袋 "},
+{index:198, name:"贝贝南瓜", spec:"36 个 / 箱（箱重 15kg）", price:180, boxCount:"36 个", purchasePrice:"5 元 / 个"},
+{index:199, name:"手工菜龙", spec:"130g10 个8 袋 ", price:80, boxCount:"80 个 ", purchasePrice:"1 元 / 个 "},
+{index:200, name:"精品鸭饼", spec:"20 张100 包 ", price:130, boxCount:" 搭配烤鸭 ", purchasePrice:""},
+{index:201, name:"蒸煎饺（素三鲜 / 鲜肉玉米）", spec:"1kg10 袋 ", price:90, boxCount:"20 斤 ", purchasePrice:"4.5 元 / 斤 "},
+{index:202, name:"纸皮蒸煎饺（猪肉玉米 / 猪肉白菜 / 猪肉韭菜 / 黑胡椒牛肉 / 猪肉荠菜）", spec:"1kg10 袋 ", price:98, boxCount:"20 斤 ", purchasePrice:"4.9 元 / 斤 "},
+{index:203, name:"大锅贴（牛肉 / 猪肉玉米）", spec:"1kg8 袋（个重约 40g）", price:100, boxCount:"16 斤 ", purchasePrice:"6.25 元 / 斤 "},
+{index:204, name:"素三鲜长条锅贴", spec:"1kg8 袋 (个重约 40g)", price:95, boxCount:"16 斤 ", purchasePrice:"5.93 元 / 斤 "},
+{index:205, name:"韭菜盒子", spec:"2.6kg4 袋 ", price:90, boxCount:"80 个 ", purchasePrice:"1.12 元 / 个 "},
+{index:206, name:"牛肉盒子", spec:"2.6kg4 袋 ", price:130, boxCount:"80 个 ", purchasePrice:"1.62 元 / 个 "},
+{index:207, name:"卤肉盒子 / 三丝盒子", spec:"130g6 个12 袋 ", price:95, boxCount:"80 个 ", purchasePrice:"1.18 元 / 个 "},
+{index:208, name:"果蔬拇指包", spec:"500g20 包 ", price:110, boxCount:"20 斤 ", purchasePrice:"5.5 元 / 斤 "},
+{index:209, name:"拇指生煎包", spec:"120 袋500g", price:110, boxCount:"20 斤 ", purchasePrice:"5.5 元 / 斤 "},
+{index:210, name:"薄皮素包 韭菜鸡蛋", spec:"500g20 袋（个重约 33-40g）", price:105, boxCount:"20 斤 ", purchasePrice:"5.25 元 / 斤 "},
+{index:211, name:"牛肉大煎包", spec:"90g20 个6 包 ", price:110, boxCount:"120 个 ", purchasePrice:"0.91 元 / 个 "},
+{index:212, name:"韭菜鸡蛋大煎包", spec:"90g20 个6 包 ", price:108, boxCount:"120 个 ", purchasePrice:"0.9 元 / 个 "},
+{index:213, name:"香酥绿豆饼", spec:"50g200 个 / 20 斤 ", price:110, boxCount:"20 斤 ", purchasePrice:"5.5 元 / 斤 "},
+{index:214, name:"香酥红豆饼", spec:"50g200 个 / 20 斤 ", price:130, boxCount:"20 斤 ", purchasePrice:"6.5 元 / 斤 "},
+{index:215, name:"拔丝绿豆饼", spec:"50g200 个 / 20 斤 ", price:130, boxCount:"20 斤 ", purchasePrice:"6.5 元 / 斤 "},
+{index:216, name:"牛乳香芋饼", spec:"50g200 个 / 20 斤 ", price:210, boxCount:"20 斤 ", purchasePrice:"10.5 元 / 斤 "},
+{index:217, name:"韭菜鸡蛋煎饼", spec:"100g10 个8 袋 ", price:128, boxCount:"80 个 ", purchasePrice:"1.6 元 / 个 "},
+{index:218, name:"菠菜鸡蛋煎饼", spec:"100g10 个8 袋 ", price:128, boxCount:"80 个 ", purchasePrice:"1.6 元 / 个 "},
+{index:219, name:"四方烤肉饼", spec:"130g6 个10 包 ", price:110, boxCount:"60 个 ", purchasePrice:"1.83 元 / 个 "},
+{index:220, name:"门钉肉饼", spec:"120 克20 个4 包 ", price:100, boxCount:"80 个 ", purchasePrice:"1.25 元 / 个 "},
+{index:221, name:"荠菜锅贴馒头", spec:"120g10 个6 袋 ", price:80, boxCount:"60 个 ", purchasePrice:"1.333333 元 / 个 "},
+{index:222, name:"肉蛋堡", spec:"140g18 个4 袋 ", price:150, boxCount:"72 个 ", purchasePrice:"2.08 元 / 个 "},
+{index:223, name:"100g 大油条（约 31-32 公分）", spec:"10kg / 件", price:68, boxCount:"100 个", purchasePrice:"0.68 元 / 个"},
+{index:224, name:"80g 大油条", spec:"80g100 根（8kg / 件）", price:55, boxCount:"100 根 ", purchasePrice:"0.55 元 / 根 "},
+{index:225, name:"生胚油条", spec:"85g200 根 ", price:135, boxCount:"200 根 ", purchasePrice:"0.67 元 / 根 "},
+{index:226, name:"小胖子油条", spec:"500g12 包 ", price:50, boxCount:"6kg", purchasePrice:"4.16 元 / 斤 "},
+{index:227, name:"茴香小油条", spec:"240g16 袋 ", price:65, boxCount:"7.6 斤 ", purchasePrice:"8.55 元 / 斤 "},
+{index:228, name:"茴香油馍头", spec:"1.5g4 袋 ", price:60, boxCount:"12 斤 ", purchasePrice:"5 元 / 斤 "},
+{index:229, name:"30g 糍粑油条含料包 250g", spec:"2.5kg2 袋（个重约 30g）", price:105, boxCount:"10 斤 ", purchasePrice:"10.5 元 / 斤 "},
+{index:230, name:"70g 糍粑油条", spec:"70g5 个20 袋 ", price:145, boxCount:"14 斤 ", purchasePrice:"10.35 元 / 斤 "},
+{index:231, name:"马蹄酥", spec:"360g15 袋 ", price:70, boxCount:"90 个 ", purchasePrice:"0.77 元 / 个 "},
+{index:232, name:"炸肉盒（牛肉粉条）", spec:"200g10 个6 袋 ", price:150, boxCount:"60 个 ", purchasePrice:"2.5 元 / 个 "},
+{index:233, name:"大菜角", spec:"80g30 个4 袋 ", price:52, boxCount:"120 个 ", purchasePrice:"0.43 元 / 个 "},
+{index:234, name:"糖糕（白糖）", spec:"100g30 个4 袋 ", price:43, boxCount:"120 个 ", purchasePrice:"0.35 元 / 个 "},
+{index:235, name:"糖糕（红糖）", spec:"100g30 个4 袋 ", price:55, boxCount:"120 个 ", purchasePrice:"0.45 元 / 个 "},
+{index:236, name:"方形葱油饼", spec:"480g12 袋 ", price:76, boxCount:"96 个 ", purchasePrice:"0.79 元 / 个 "},
+{index:237, name:"大麻球", spec:"2.25kg4 袋 ", price:75, boxCount:"160 个 ", purchasePrice:"0.46 元 / 个 "},
+{index:238, name:"鸡腿麻花", spec:"100g100 根 ", price:130, boxCount:"100 根 ", purchasePrice:"1.3 元 / 根 "},
+{index:239, name:"爆浆软麻花（酸奶 / 榴莲）", spec:"120g100 根 ", price:110, boxCount:"100 根 ", purchasePrice:"1.1 元 / 根 "},
+{index:240, name:"胖东来同款大麻花（酸奶 / 芝士 / 椰蓉 / 香芋）", spec:"125g100 根 ", price:130, boxCount:"100 根 ", purchasePrice:"1.3 元 / 根 "},
+{index:241, name:"升级款 150g 爆浆麻花（酸奶）", spec:"150g90 个 ", price:125, boxCount:"90 个 ", purchasePrice:"1.38 元 / 个 "},
+{index:242, name:"千层麻花", spec:"115g110 根 ", price:135, boxCount:"110 根 ", purchasePrice:"1.23 元 / 根 "},
+{index:243, name:"蛋黄南瓜麻花", spec:"60g200 根 ", price:130, boxCount:"200 根 ", purchasePrice:"0.65 元 / 根 "},
+{index:244, name:"豆沙春卷", spec:"17g14 个20 袋 ", price:55, boxCount:"280 个 ", purchasePrice:"5.78 元 / 斤 "},
+{index:245, name:"素春卷", spec:"2kg5 袋 ", price:75, boxCount:"160 个 ", purchasePrice:"0.46 元 / 个 "},
+{index:246, name:"丸子（萝卜 / 蔬菜）", spec:"2.5kg4 袋 ", price:85, boxCount:"20 斤 ", purchasePrice:"4.25 元 / 斤 "},
+{index:247, name:"脆皮香蕉", spec:"300g20 袋 ", price:75, boxCount:"12 斤 ", purchasePrice:"6.25 元 / 斤 "},
+{index:248, name:"合祎油炸糕", spec:"100g20 个6 袋 ", price:125, boxCount:"120 个 ", purchasePrice:"1.041667 元 / 个 "},
+{index:249, name:"红薯烙", spec:"110g80 个 ", price:85, boxCount:"80 个 ", purchasePrice:"1.06 元 / 个 "},
+{index:250, name:"紫薯豌豆球", spec:"20g12 个16 袋 ", price:50, boxCount:"7.6 斤 ", purchasePrice:"6.57 元 / 斤 "},
+{index:251, name:"香芋地瓜丸", spec:"400g10 袋 ", price:40, boxCount:"8 斤 ", purchasePrice:"5 元 / 斤 "},
+{index:252, name:"至尊芝士麻球（紫米红豆 / 紫米肉松）", spec:"280g40 个 ", price:160, boxCount:"40 个 ", purchasePrice:"4 元 / 个 "},
+{index:253, name:"手工枣发糕", spec:"75g30 个4 袋 ", price:100, boxCount:"120 个 ", purchasePrice:"0.833333 元 / 个 "},
+{index:254, name:"红糖爆浆糍粑", spec:"300g12 袋（个重约 22g）", price:55, boxCount:"7.2 斤 ", purchasePrice:"7.63 元 / 斤 "},
+{index:255, name:"酸奶爆浆糍粑", spec:"270g12 袋（个重约 22g）", price:75, boxCount:"6.4 斤 ", purchasePrice:"11.7 元 / 斤 "},
+{index:256, name:"紫薯派", spec:"85g100 个 ", price:85, boxCount:"100 个 ", purchasePrice:"0.85 元 / 个 "},
+{index:257, name:"酱香饼", spec:"1000g15 张 ", price:100, boxCount:"30 斤 ", purchasePrice:"3.33 元 / 斤 "},
+{index:258, name:"香葱大饼", spec:"1200g10", price:85, boxCount:"24 斤 ", purchasePrice:"3.541667 元 / 斤 "},
+{index:259, name:"芝麻烧饼（椒盐）", spec:"100g12 个6 袋 ", price:90, boxCount:"72 个 ", purchasePrice:"1.25 元 / 个 "},
+{index:260, name:"芝麻烧饼（麻酱）", spec:"100g12 个6 袋 ", price:95, boxCount:"72 个 ", purchasePrice:"1.31 元 / 个 "},
+{index:261, name:"油酥烧饼", spec:"120g60 个2 袋 ", price:110, boxCount:"120 个 ", purchasePrice:"0.91 元 / 个 "},
+{index:262, name:"豆沙油酥烧饼", spec:"130g4 个16 袋 ", price:96, boxCount:"64 个 ", purchasePrice:"1.5 元 / 个 "},
+{index:263, name:"千层饼五香", spec:"16kg2 包 ", price:75, boxCount:"24 斤 ", purchasePrice:"3.12 元 / 斤 "},
+{index:264, name:"千层饼葱香", spec:"16kg2 包 ", price:75, boxCount:"24 斤 ", purchasePrice:"3.12 元 / 斤 "},
+{index:265, name:"千层饼菠菜", spec:"16kg2 包 ", price:75, boxCount:"24 斤 ", purchasePrice:"3.12 元 / 斤 "},
+{index:266, name:"韭菜烙饼（手工）", spec:"130g60 个2 袋 ", price:100, boxCount:"120 个 ", purchasePrice:"0.83 元 / 个 "},
+{index:267, name:"香葱烙饼（手工）", spec:"130g60 个2 袋 ", price:100, boxCount:"120 个 ", purchasePrice:"0.83 元 / 个 "},
+{index:268, name:"玉米红豆烙饼（手工）", spec:"130g60 个2 袋 ", price:100, boxCount:"120 个 ", purchasePrice:"0.83 元 / 个 "},
+{index:269, name:"荠菜烙饼（手工）", spec:"130g60 个2 袋 ", price:100, boxCount:"120 个 ", purchasePrice:"0.83 元 / 个 "},
+{index:270, name:"香葱盘香饼", spec:"120g60 个 ", price:75, boxCount:"60 个 ", purchasePrice:"1.25 元 / 个 "},
+{index:271, name:"老面蔬菜饼（雪菜）", spec:"130g60 个 ", price:84, boxCount:"60 个 ", purchasePrice:"1.4 元 / 个 "},
+{index:272, name:"120g 发面馅饼（香辣牛肉 / 荠菜鸡蛋 / 猪肉大葱 / 奥尔良鸡肉）", spec:"120g10 片6 袋 ", price:105, boxCount:"60 个 ", purchasePrice:"1.75 元 / 个 "},
+{index:273, name:"牛舌饼", spec:"150g60 个 ", price:80, boxCount:"60 个 ", purchasePrice:"1.33 元 / 个 "},
+{index:274, name:"酒酿饼（桂花 / 玉米 / 玫瑰）", spec:"120g120 个 ", price:125, boxCount:"120 个 ", purchasePrice:"1.04 元 / 个 "},
+{index:275, name:"酒酿饼", spec:"150g70 个 ", price:85, boxCount:"70 个 ", purchasePrice:"1.21 元 / 个 "},
+{index:276, name:"潼关饼", spec:"110g6 袋30 个 ", price:95, boxCount:"180 个 ", purchasePrice:"0.52 元 / 个 "},
+{index:277, name:"白吉馍", spec:"65g12 包20 个 ", price:100, boxCount:"240 个 ", purchasePrice:"0.41 元 / 个 "},
+{index:278, name:"梅干菜锅盔", spec:"95g10 个12 袋 ", price:145, boxCount:"120 个 ", purchasePrice:"1.21 元 / 个 "},
+{index:279, name:"牛肉锅盔", spec:"95g10 个12 袋 ", price:165, boxCount:"120 个 ", purchasePrice:"1.37 元 / 个 "},
+{index:280, name:"脆皮小锅盔（梅干菜 / 鲜肉香葱 / 奥尔良鸡肉 / 豆沙 / 榴莲 / 香辣牛肉）", spec:"15 个20 袋（箱重 11.4kg）", price:190, boxCount:"300 个 ", purchasePrice:"0.63 元 / 个 "},
+{index:281, name:"手工老面火烧", spec:"160 个 (7.7kg)", price:65, boxCount:"60 个 ", purchasePrice:"1.08 元 / 个 "},
+{index:282, name:"纯老面地锅饼", spec:"900g10 包（个重约 450g）", price:90, boxCount:"20 个 ", purchasePrice:"4.5 元 / 个 "},
+{index:283, name:"生胚手工盘香饼", spec:"120g80 个 ", price:88, boxCount:"80 个 ", purchasePrice:"1.1 元 / 个 "},
+{index:284, name:"香酥黑米饼", spec:"50g200 个 / 20 斤 ", price:120, boxCount:"20 斤 ", purchasePrice:"6 元 / 斤 "},
+{index:285, name:"香酥板栗饼", spec:"50g200 个 / 20 斤 ", price:125, boxCount:"20 斤 ", purchasePrice:"6.25 元 / 斤 "},
+{index:286, name:"板栗饼（甜 / 咸）", spec:"9kg（35g 左右 / 个）", price:125, boxCount:"18 斤", purchasePrice:"6.944444 元 / 斤"},
+{index:287, name:"汉堡胚", spec:"65g144 个 ", price:70, boxCount:"144 个 ", purchasePrice:"0.48 元 / 个 "},
+{index:288, name:"猪肉炒河粉", spec:"450g24 袋 ", price:119, boxCount:"24 袋 ", purchasePrice:"4.9 元 / 袋 "},
+{index:289, name:"鸡蛋炒河粉", spec:"450g24 袋 ", price:119, boxCount:"24 袋 ", purchasePrice:"4.9 元 / 袋 "},
+{index:290, name:"扬州炒饭", spec:"450g24 袋 ", price:119, boxCount:"24 袋 ", purchasePrice:"4.9 元 / 袋 "},
+{index:291, name:"腊味炒饭", spec:"450g24 袋 ", price:125, boxCount:"24 袋 ", purchasePrice:"5.2 元 / 袋 "},
+{index:292, name:"香酥牛奶棒", spec:"200 根 / 箱", price:170, boxCount:"200 个", purchasePrice:"0.85 元 / 根"},
+{index:293, name:"烤蜜薯", spec:"2.5kg4 袋 ", price:125, boxCount:"20 斤 ", purchasePrice:"6.25 元 / 斤 "},
+{index:294, name:"玫瑰鲜花饼", spec:"10kg（40g 左右 / 个）", price:188, boxCount:"20 斤", purchasePrice:"9.4 元 / 斤"},
+{index:295, name:"白玉米（1 号）/ 黄玉米（1 号）", spec:"140 个（18 公分）", price:75, boxCount:"40 个 ", purchasePrice:"1.87 元 / 个 "},
+{index:296, name:"合祎奥尔良鸡肉馅", spec:"2.5kg4", price:165, boxCount:"20 斤 ", purchasePrice:"8.25 元 / 斤 "},
+{index:297, name:"合祎原味牛肉馅", spec:"2.5kg4", price:230, boxCount:"20 斤 ", purchasePrice:"11.5 元 / 斤 "},
+{index:298, name:"合祎酸豆角馅", spec:"2.5kg4", price:110, boxCount:"20 斤 ", purchasePrice:"5.5 元 / 斤 "},
+{index:299, name:"合祎香菇青菜馅", spec:"2.5kg4", price:100, boxCount:"20 斤 ", purchasePrice:"5 元 / 斤 "},
+{index:300, name:"合祎香辣雪菜馅", spec:"2.5kg4", price:100, boxCount:"20 斤 ", purchasePrice:"5 元 / 斤 "},
+{index:301, name:"合祎鱼香肉丝馅", spec:"2.5kg4", price:160, boxCount:"20 斤 ", purchasePrice:"8 元 / 斤 "},
+{index:302, name:"合祎梅干菜肉馅", spec:"2.5kg4", price:140, boxCount:"20 斤 ", purchasePrice:"7 元 / 斤 "},
+{index:303, name:"合祎鲜汁肉馅", spec:"2.5kg4", price:165, boxCount:"20 斤 ", purchasePrice:"8.25 元 / 斤 "},
+{index:304, name:"酱香饼酱", spec:"110kg", price:160, boxCount:"20 斤 ", purchasePrice:"160 元 "},
+{index:305, name:"麻花", spec:"500g20 袋 ", price:135, boxCount:"20 袋 ", purchasePrice:"6.75 元 / 斤 "},
+{index:306, name:"馓子", spec:"250g18 包 ", price:85, boxCount:"18 袋 ", purchasePrice:"4.72 元 / 斤 "},
+{index:307, name:"金丝馓子", spec:"220g / 盒20 盒 ", price:126, boxCount:"20 盒 ", purchasePrice:"6.3 元 / 盒 "},
+{index:308, name:"山楂糕", spec:"110kg", price:80, boxCount:"20 斤 ", purchasePrice:"4 元 / 斤 "},
+{index:309, name:"原味梨", spec:"32 包 / 箱", price:120, boxCount:"32 袋", purchasePrice:"3.75 元 / 袋"},
+{index:310, name:"冰糖绿豆沙", spec:"300ml24 袋 ", price:40, boxCount:"24 袋 ", purchasePrice:"1.66 元 / 袋 "},
+{index:311, name:"酸梅汤", spec:"350g40 杯 ", price:40, boxCount:"40 杯 ", purchasePrice:"1 元 / 杯 "},
+{index:312, name:"奶昔（草莓 / 芒果 / 蜜桃 / 猕猴桃 / 蓝莓）", spec:"300ml24 包 ", price:40, boxCount:"24 包 ", purchasePrice:"1.6 元 / 袋 "},
+{index:313, name:"炭烧奶茶", spec:"300ml24 包 ", price:50, boxCount:"24 包 ", purchasePrice:"2.08 元 / 袋 "},
+{index:314, name:"豆奶 袋（黑豆 / 红枣 / 花生）", spec:"248g40 袋 ", price:42, boxCount:"40 袋 ", purchasePrice:"1.05 元 / 袋 "},
+{index:315, name:"豆浆杯（原味 / 红枣）", spec:"320g40 杯 ", price:42, boxCount:"40 杯 ", purchasePrice:"1.05 元 / 杯 "},
+{index:316, name:"合祎小米粥 / 合祎南瓜粥 / 合祎八宝粥 / 合祎黑米粥", spec:"365g40 杯 ", price:0, boxCount:"40 杯 ", purchasePrice:"0 元 / 杯 "},
+{index:317, name:"合祎牛奶燕麦粥", spec:"320g40 杯 ", price:43, boxCount:"40 杯 ", purchasePrice:"1.075 元 / 杯 "},
+{index:318, name:"合祎银耳羹", spec:"360g40 杯 ", price:45, boxCount:"40 杯 ", purchasePrice:"1.125 元 / 杯 "},
+{index:319, name:"青团（大福）（12 个口味）", spec:"15kg（个重 50g）", price:78, boxCount:"10 斤 ", purchasePrice:"7.8 元 / 斤 "},
+{index:320, name:"黑椒牛肉三角饭团", spec:"99g150 个 ", price:412, boxCount:"150 个 ", purchasePrice:"2.75 元 / 个 "},
+{index:321, name:"名古屋炸鸡三角饭团", spec:"99g150 个 ", price:412, boxCount:"150 个 ", purchasePrice:"2.75 元 / 个 "},
+{index:322, name:"奥尔良鸡肉三角饭团", spec:"99g150 个 ", price:412, boxCount:"150 个 ", purchasePrice:"2.75 元 / 个 "},
+{index:323, name:"咖喱鸡肉饭团", spec:"99g150 个 ", price:412, boxCount:"150 个 ", purchasePrice:"2.75 元 / 个 "},
+{index:324, name:"麻辣生蚝肉", spec:"", price:788, boxCount:"30 斤 ", purchasePrice:"26.266667 元 / 斤 "},
+{index:325, name:"火龙果炸鸡", spec:"", price:185, boxCount:"20 斤 ", purchasePrice:"9.25 元 / 斤 "},
+{index:326, name:"黑松露炸鸡", spec:"", price:198, boxCount:"20 斤 ", purchasePrice:"9.9 元 / 斤 "},
+{index:327, name:"罗非鱼条", spec:"", price:320, boxCount:"20 斤 ", purchasePrice:"16 元 / 斤 "},
+{index:328, name:"脱脂猪头肉", spec:"", price:320, boxCount:"20 斤 ", purchasePrice:"16 元 / 斤 "},
+{index:329, name:"地道肠系列（原味 / 黑椒）", spec:"", price:265, boxCount:"200 根 ", purchasePrice:"1.32 元 / 根 "},
+{index:330, name:"霸王肠（原味 / 黑椒)", spec:"", price:220, boxCount:"100 根 ", purchasePrice:"2.2 元 / 根 "},
+{index:331, name:"秘卤肉肠（原味 / 黑椒 / 蒜香）", spec:"", price:295, boxCount:"60 根 ", purchasePrice:"4.9 元 / 根 "},
+{index:332, name:"秘卤肉肠（辣条）", spec:"", price:295, boxCount:"60 根 ", purchasePrice:"4.9 元 / 根 "},
+{index:333, name:"秘卤肉肠（鱼籽肠）", spec:"", price:350, boxCount:"60 根 ", purchasePrice:"5.83 元 / 根 "},
+{index:334, name:"秘卤肉肠（墨鱼肠）", spec:"", price:350, boxCount:"60 根 ", purchasePrice:"5.83 元 / 根 "},
+{index:335, name:"地道肠系列（原味 / 黑椒）", spec:"", price:265, boxCount:"200 根 ", purchasePrice:"1.32 元 / 根 "},
+{index:336, name:"珍享地道肠鲜风款（原味 / 黑椒 / 辣条 / 奥尔良 / 黑鸭风）", spec:"", price:370, boxCount:"200 根 ", purchasePrice:"1.85 元 / 根 "},
+{index:337, name:"小甜肠（广式 / 辣条）", spec:"", price:320, boxCount:"20 斤 ", purchasePrice:"16 元 / 斤 "},
+{index:338, name:"霸王肠（原味 / 黑椒)", spec:"", price:220, boxCount:"100 根 ", purchasePrice:"2.2 元 / 根 "},
+{index:339, name:"肉枣肠（原味）", spec:"", price:275, boxCount:"20 斤 ", purchasePrice:"13.75 元 / 斤 "},
+{index:340, name:"黄焖鱼块", spec:"", price:224, boxCount:"16 碗 ", purchasePrice:"14 元 / 碗 "},
+{index:341, name:"黄焖小酥肉", spec:"", price:224, boxCount:"16 碗 ", purchasePrice:"14 元 / 碗 "},
+{index:342, name:"黄焖鸡块", spec:"", price:224, boxCount:"16 碗 ", purchasePrice:"14 元 / 碗 "},
+{index:343, name:"红烧狮子头", spec:"", price:224, boxCount:"16 碗 ", purchasePrice:"14 元 / 碗 "},
+{index:344, name:"梅菜扣肉", spec:"", price:344, boxCount:"16 碗 ", purchasePrice:"21.5 元 / 碗 "},
+{index:345, name:"八宝饭", spec:"", price:128, boxCount:"16 碗 ", purchasePrice:"8 元 / 碗 "},
+{index:346, name:"黄焖排骨", spec:"", price:312, boxCount:"16 碗 ", purchasePrice:"19.5 元 / 碗 "},
+{index:347, name:"黄焖藕条", spec:"", price:144, boxCount:"16 碗 ", purchasePrice:"9 元 / 碗 "},
+{index:348, name:"甜辣鸭头", spec:"", price:400, boxCount:"120 个 ", purchasePrice:"3.33 元 / 个 "},
+{index:349, name:"甜辣鸭锁骨", spec:"", price:330, boxCount:"20 斤 ", purchasePrice:"16.5 元 / 斤 "},
+{index:350, name:"甜辣鸭脖", spec:"", price:260, boxCount:"20 斤 ", purchasePrice:"13 元 / 斤 "},
+{index:351, name:"甜辣鸭翅中", spec:"", price:380, boxCount:"20 斤 ", purchasePrice:"19 元 / 斤 "},
+{index:352, name:"甜辣鸭全翅", spec:"", price:330, boxCount:"20 斤 ", purchasePrice:"16.5 元 / 斤 "},
+{index:353, name:"鸭边腿", spec:"", price:250, boxCount:"200g / 个 ", purchasePrice:"5 元 / 个 "},
+{index:354, name:"酱鸭", spec:"", price:285, boxCount:"15 只 ", purchasePrice:"19 元 / 只 "},
+{index:355, name:"油卤脆肠（香辣红油）", spec:"", price:488, boxCount:"20 斤 ", purchasePrice:"24.4 元 / 斤 "},
+{index:356, name:"油卤脆肠（麻辣藤椒）", spec:"", price:488, boxCount:"20 斤 ", purchasePrice:"24.4 元 / 斤 "},
+{index:357, name:"藤椒鸭掌", spec:"", price:462, boxCount:"20 斤 ", purchasePrice:"23.1 元 / 斤 "},
+{index:358, name:"佤味鸡爪", spec:"", price:462, boxCount:"20 斤 ", purchasePrice:"23.1 元 / 斤 "},
+{index:359, name:"脆皮黄油鸡", spec:"", price:360, boxCount:"10 只 ", purchasePrice:"36 元 / 只 "},
+{index:360, name:"麻椒鸡", spec:"", price:340, boxCount:"10 只 ", purchasePrice:"34 元 / 只 "},
+{index:361, name:"醋喷鸡架", spec:"", price:100, boxCount:"20 个 ", purchasePrice:"5 元 / 个 "},
+{index:362, name:"虎皮鸡爪（五香）", spec:"", price:460, boxCount:"20 斤 ", purchasePrice:"23 元 / 斤 "},
+{index:363, name:"脱骨鸡爪（酸辣柠檬 / 蒜香甜辣）", spec:"", price:450, boxCount:"20 斤 ", purchasePrice:"22.5 元 / 斤 "},
+{index:364, name:"脱骨鸡爪（川香红油 / 麻辣藤椒）", spec:"", price:450, boxCount:"20 斤 ", purchasePrice:"22.5 元 / 斤 "},
+{index:365, name:"椒麻大杂烩", spec:"", price:320, boxCount:"20 斤 ", purchasePrice:"16 元 / 斤 "},
+{index:366, name:"五香鸡腿", spec:"", price:300, boxCount:"20 斤 ", purchasePrice:"15 元 / 斤 "},
+{index:367, name:"甜辣杏鲍菇", spec:"", price:246, boxCount:"20 斤 ", purchasePrice:"12.3 元 / 斤 "},
+{index:368, name:"甜辣海带结", spec:"", price:210, boxCount:"20 斤 ", purchasePrice:"10.5 元 / 斤 "},
+{index:369, name:"甜辣豆干", spec:"", price:180, boxCount:"20 斤 ", purchasePrice:"9 元 / 斤 "},
+{index:370, name:"甜辣鱼豆腐", spec:"", price:233, boxCount:"20 斤 ", purchasePrice:"11.65 元 / 斤 "},
+{index:371, name:"甜辣千叶豆腐", spec:"", price:216, boxCount:"20 斤 ", purchasePrice:"10.8 元 / 斤 "},
+{index:372, name:"五香花生", spec:"", price:103, boxCount:"20 斤 ", purchasePrice:"5.15 元 / 斤 "},
+{index:373, name:"香辣毛豆", spec:"", price:120, boxCount:"20 斤 ", purchasePrice:"6 元 / 斤 "},
+{index:374, name:"脱脂猪头肉", spec:"", price:320, boxCount:"20 斤 ", purchasePrice:"16 元 / 斤 "},
+{index:375, name:"合祎五香半猪蹄", spec:"", price:560, boxCount:"20 斤 ", purchasePrice:"28 元 / 斤 "},
+{index:376, name:"合祎五香猪蹄块", spec:"", price:540, boxCount:"20 斤 ", purchasePrice:"27 元 / 斤 "},
+{index:377, name:"麻辣猪蹄块", spec:"", price:540, boxCount:"20 斤 ", purchasePrice:"27 元 / 斤 "},
+{index:378, name:"五香猪耳", spec:"", price:580, boxCount:"20 斤 ", purchasePrice:"29 元 / 斤 "},
+{index:379, name:"合祎蜂蜜猪肝", spec:"", price:220, boxCount:"20 斤 ", purchasePrice:"11 元 / 斤 "},
+{index:380, name:"柠檬猪皮丝", spec:"", price:290, boxCount:"20 斤 ", purchasePrice:"14.5 元 / 斤 "},
+{index:381, name:"五香猪腱", spec:"", price:460, boxCount:"20 斤 ", purchasePrice:"23 元 / 斤 "},
+{index:382, name:"合祎稻香肉", spec:"", price:475, boxCount:"20 斤 ", purchasePrice:"23.75 元 / 斤 "},
+{index:383, name:"合祎酱香大骨", spec:"", price:258, boxCount:"20 斤 ", purchasePrice:"12.9 元 / 斤 "},
+{index:384, name:"合祎把子肉", spec:"", price:400, boxCount:"20 斤 ", purchasePrice:"20 元 / 斤 "},
+{index:385, name:"香卤肥肠", spec:"", price:680, boxCount:"20 斤 ", purchasePrice:"34 元 / 斤 "},
+{index:386, name:"合祎五香牛肉", spec:"", price:2310, boxCount:"40 斤 ", purchasePrice:"57.75 元 / 斤 "},
+{index:387, name:"合祎酱香牛腱", spec:"", price:2330, boxCount:"40 斤 ", purchasePrice:"58.25 元 / 斤 "},
+{index:388, name:"合祎五香牛肉（冷冻）", spec:"", price:2130, boxCount:"40 斤 ", purchasePrice:"53.25 元 / 斤 "},
+{index:389, name:"合祎酱香牛腱（冷冻）", spec:"", price:2330, boxCount:"40 斤 ", purchasePrice:"58.25 元 / 斤 "},
+{index:390, name:"酱香牛肚", spec:"", price:800, boxCount:"20 斤 ", purchasePrice:"40 元 / 斤 "},
+{index:391, name:"冷吃牛肉条（麻辣)", spec:"", price:1060, boxCount:"20 斤 ", purchasePrice:"53 元 / 斤 "},
+{index:392, name:"麻辣钉螺", spec:"", price:263, boxCount:"30 斤 ", purchasePrice:"8.76 元 / 斤 "},
+{index:393, name:"麻辣花螺", spec:"", price:469, boxCount:"30 斤 ", purchasePrice:"15.63 元 / 斤 "},
+{index:394, name:"麻辣蟹钳", spec:"", price:588, boxCount:"30 斤 ", purchasePrice:"19.6 元 / 斤 "},
+{index:395, name:"麻辣扇贝肉", spec:"", price:550, boxCount:"30 斤 ", purchasePrice:"18.33 元 / 斤 "},
+{index:396, name:"麻辣八爪鱼", spec:"", price:1063, boxCount:"30 斤 ", purchasePrice:"35.43 元 / 斤 "},
+{index:397, name:"麻辣鱿鱼头", spec:"", price:613, boxCount:"30 斤 ", purchasePrice:"20.43 元 / 斤 "},
+{index:398, name:"麻辣田螺", spec:"", price:213, boxCount:"30 斤 ", purchasePrice:"7.1 元 / 斤 "},
+{index:399, name:"麻辣花蛤", spec:"", price:285, boxCount:"30 斤 ", purchasePrice:"9.5 元 / 斤 "},
+{index:400, name:"麻辣皮皮虾", spec:"", price:750, boxCount:"30 斤 ", purchasePrice:"25 元 / 斤 "},
+{index:401, name:"麻辣龙虾尾", spec:"", price:700, boxCount:"30 斤 ", purchasePrice:"23.33 元 / 斤 "},
+{index:402, name:"麻辣鱿鱼须", spec:"", price:700, boxCount:"30 斤 ", purchasePrice:"23.33 元 / 斤 "},
+{index:403, name:"麻辣墨鱼仔", spec:"", price:725, boxCount:"30 斤 ", purchasePrice:"24.16 元 / 斤 "},
+{index:404, name:"麻辣大虾 30 斤", spec:"", price:775, boxCount:"30 斤 ", purchasePrice:"25.83 元 / 斤 "},
+{index:405, name:"麻辣罗氏虾", spec:"", price:850, boxCount:"30 斤 ", purchasePrice:"28.333333 元 / 斤 "},
+{index:406, name:"椒麻小酥肉（猪肉）", spec:"", price:300, boxCount:"20 斤 ", purchasePrice:"15 元 / 斤 "},
+{index:407, name:"小酥肉 (鸡肉)", spec:"", price:165, boxCount:"20 斤 ", purchasePrice:"8.25 元 / 斤 "},
+{index:408, name:"炸肉丸", spec:"", price:150, boxCount:"20 斤 ", purchasePrice:"7.5 元 / 斤 "},
+{index:409, name:"黄金脂渣", spec:"", price:312, boxCount:"24 斤 ", purchasePrice:"13 元 / 斤 "},
+{index:410, name:"香酥炸带鱼", spec:"", price:135, boxCount:"16 斤 ", purchasePrice:"8.4 元 / 斤 "},
+{index:411, name:"香酥炸带鱼（大）", spec:"", price:310, boxCount:"20 斤 ", purchasePrice:"15.5 元 / 斤 "},
+{index:412, name:"香酥炸黄鱼（带头大号）", spec:"", price:165, boxCount:"16 斤 ", purchasePrice:"10.3 元 / 斤 "},
+{index:413, name:"香酥炸黄鱼（去头标号号）", spec:"", price:140, boxCount:"16 斤 ", purchasePrice:"8.75 元 / 斤 "},
+{index:414, name:"油炸小斑鱼", spec:"", price:210, boxCount:"20 斤 ", purchasePrice:"10.5 元 / 斤 "},
+{index:415, name:"油炸海泥鳅", spec:"", price:230, boxCount:"20 斤 ", purchasePrice:"11.5 元 / 斤 "},
+{index:416, name:"香酥炸小白条鱼", spec:"", price:188, boxCount:"16 斤 ", purchasePrice:"11.75 元 / 斤 "},
+{index:417, name:"香酥炸刀鱼", spec:"", price:264, boxCount:"16 斤 ", purchasePrice:"16.5 元 / 斤 "},
+{index:418, name:"酥脆小蟹", spec:"", price:210, boxCount:"20 斤 ", purchasePrice:"10.5 元 / 斤 "},
+{index:419, name:"罗非鱼条", spec:"", price:320, boxCount:"20 斤 ", purchasePrice:"16 元 / 斤 "},
+{index:420, name:"火龙果炸鸡", spec:"", price:185, boxCount:"20 斤 ", purchasePrice:"9.25 元 / 斤 "},
+{index:421, name:"黑松露炸鸡", spec:"", price:198, boxCount:"20 斤 ", purchasePrice:"9.9 元 / 斤 "},
+{index:422, name:"卡兹脆鸡排", spec:"", price:150, boxCount:"20 斤 ", purchasePrice:"7.5 元 / 斤 "},
+{index:423, name:"黄金球", spec:"", price:125, boxCount:"16 斤 ", purchasePrice:"7.8 元 / 斤 "},
+{index:424, name:"合祎牙签肉", spec:"", price:136, boxCount:"18 斤 ", purchasePrice:"7.5 元 / 斤 "},
+{index:425, name:"黄金脆柳", spec:"", price:138, boxCount:"18 斤 ", purchasePrice:"7.6 元 / 斤 "},
+{index:426, name:"松林鸡柳", spec:"", price:120, boxCount:"16 斤 ", purchasePrice:"7.5 元 / 斤 "},
+{index:427, name:"雪花鸡柳", spec:"", price:130, boxCount:"18 斤 ", purchasePrice:"7.22 元 / 斤 "},
+{index:428, name:"西域贝贝鸡", spec:"", price:155, boxCount:"20 斤 ", purchasePrice:"7.75 元 / 斤 "},
+{index:429, name:"Y 洋葱圈", spec:"", price:104, boxCount:"16 斤 ", purchasePrice:"6.5 元 / 斤 "},
+{index:430, name:"Y 韩式炸鸡", spec:"", price:173, boxCount:"20 斤 ", purchasePrice:"8.65 元 / 斤 "},
+{index:431, name:"合祎韩式炸鸡", spec:"", price:160, boxCount:"20 斤 ", purchasePrice:"8 元 / 斤 "},
+{index:432, name:"藤椒鸡腿", spec:"", price:250, boxCount:"20 斤 ", purchasePrice:"12.5 元 / 斤 "},
+{index:433, name:"椒麻辣子鸡", spec:"", price:129, boxCount:"20 斤 ", purchasePrice:"6.45 元 / 斤 "},
+{index:434, name:"国潮海苔鸡柳棒", spec:"", price:148, boxCount:"18 斤 ", purchasePrice:"8.22 元 / 斤 "},
+{index:435, name:"奥尔良全腿", spec:"", price:225, boxCount:"60 个 ", purchasePrice:"3.75 元 / 个 "},
+{index:436, name:"腌渍奥尔良琵琶腿", spec:"", price:200, boxCount:"80 个 ", purchasePrice:"2.5 元 / 个 "},
+{index:437, name:"奥尔良烤鸡（23 只）", spec:"", price:165, boxCount:"23 只 ", purchasePrice:"7.1 元 / 只 "},
+{index:438, name:"奥尔良烤鸡（20 只）", spec:"", price:182, boxCount:"20 只 ", purchasePrice:"9.1 元 / 只 "},
+{index:439, name:"奥尔良烤鸡（18 只）", spec:"", price:175, boxCount:"18 只 ", purchasePrice:"9.7 元 / 只 "},
+{index:440, name:"奥尔良烤鸡（14 只）", spec:"", price:182, boxCount:"14 只 ", purchasePrice:"13 元 / 只 "},
+{index:441, name:"调理翅中", spec:"", price:430, boxCount:" 约 180 只 ", purchasePrice:"2.39 元 / 个 "},
+{index:442, name:"调理翅根", spec:"", price:160, boxCount:" 约 180 只 ", purchasePrice:"0.89 元 / 个 "},
+{index:443, name:"脆皮炸鸡", spec:"", price:160, boxCount:"16 只 ", purchasePrice:"10 元 / 只 "},
+{index:444, name:"调理全翅", spec:"", price:276, boxCount:"100 只 ", purchasePrice:"2.76 元 / 个 "},
+{index:445, name:"调理鸡叉骨", spec:"", price:180, boxCount:"40 斤 ", purchasePrice:"4.5 元 / 斤 "},
+{index:446, name:"傲娇伴翅", spec:"", price:175, boxCount:"20 斤 ", purchasePrice:"8.75 元 / 斤 "},
+{index:447, name:"天妇罗地瓜片", spec:"", price:190, boxCount:"20 斤 ", purchasePrice:"9.5 元 / 斤 "},
+{index:448, name:"天妇罗南瓜片", spec:"", price:204, boxCount:"20 斤 ", purchasePrice:"10.2 元 / 斤 "},
+{index:449, name:"天妇罗秋葵", spec:"", price:205, boxCount:"20 斤 ", purchasePrice:"10.25 元 / 斤 "},
+{index:450, name:"天妇罗藕片", spec:"", price:192, boxCount:"20 斤 ", purchasePrice:"9.6 元 / 斤 "},
+{index:451, name:"乐炸杏鲍菇（条）", spec:"", price:282, boxCount:"24 斤 ", purchasePrice:"11.75 元 / 斤 "},
+{index:452, name:"乐炸红薯角", spec:"", price:140, boxCount:"20 斤 ", purchasePrice:"7 元 / 斤 "},
+{index:453, name:"锅巴土豆", spec:"", price:95, boxCount:"20 斤 ", purchasePrice:"4.75 元 / 斤 "},
+{index:454, name:"菩提南瓜", spec:"", price:100, boxCount:"16 斤 ", purchasePrice:"6.25 元 / 斤 "},
+{index:455, name:"脆炸平菇", spec:"", price:159, boxCount:"20 斤 ", purchasePrice:"7.95 元 / 斤 "},
+{index:456, name:"黄金地瓜条", spec:"", price:135, boxCount:"20 斤 ", purchasePrice:"6.75 元 / 斤 "},
+{index:457, name:"R1/4 裹粉薯条", spec:"", price:115, boxCount:"24 斤 ", purchasePrice:"4.79 元 / 斤 "},
+{index:458, name:"冷冻年糕", spec:"", price:88, boxCount:"20 斤 ", purchasePrice:"4.4 元 / 斤 "},
+{index:459, name:"藕合", spec:"", price:105, boxCount:"16 斤 ", purchasePrice:"6.56 元 / 斤 "},
+{index:460, name:"茄盒", spec:"", price:105, boxCount:"16 斤 ", purchasePrice:"6.56 元 / 斤 "},
+{index:461, name:"孜然撒料", spec:"", price:50, boxCount:"2 斤 ", purchasePrice:"25 元 / 斤 "},
+{index:462, name:"香辣撒料", spec:"", price:40, boxCount:"2 斤 ", purchasePrice:"20 元 / 斤 "},
+{index:463, name:"麦基斯炸鸡酱（蜂蜜芥末）", spec:"", price:210, boxCount:"24 斤 ", purchasePrice:"8.75 元 / 斤 "},
+{index:464, name:"麦基斯炸鸡酱（甜辣）", spec:"", price:245, boxCount:"24 斤 ", purchasePrice:"10.2 元 / 斤 "},
+{index:465, name:"麦基斯炸鸡酱（蒜香）", spec:"", price:245, boxCount:"24 斤 ", purchasePrice:"10.2 元 / 斤 "},
+{index:466, name:"麦基斯炸鸡酱（琥珀）", spec:"", price:230, boxCount:"24 斤 ", purchasePrice:"9.58 元 / 斤 "},
+{index:467, name:"百变甜面团", spec:"", price:260, boxCount:"240 个 ", purchasePrice:"1.083333 元 / 个 "},
+{index:468, name:"牛角包面团（爆款推荐）", spec:"", price:168, boxCount:"150 个 ", purchasePrice:"1.12 元 / 个 "},
+{index:469, name:"布里欧面团", spec:"", price:455, boxCount:"112 个 ", purchasePrice:"4.0625 元 / 个 "},
+{index:470, name:"菠萝包面团（爆款推荐）", spec:"", price:360, boxCount:"120 个 ", purchasePrice:"3 元 / 个 "},
+{index:471, name:"手撕包面团（爆款推荐）", spec:"", price:300, boxCount:"108 个 ", purchasePrice:"2.777778 元 / 个 "},
+{index:472, name:"红豆松松吐司面团（爆款推荐）", spec:"", price:518, boxCount:"207 个 ", purchasePrice:"2.502415 元 / 个 "},
+{index:473, name:"花边蛋挞皮（法式可颂）（爆款推荐）", spec:"", price:288, boxCount:"192 个 ", purchasePrice:"1.5 元 / 个 "},
+{index:474, name:"双倍酥皮蛋挞（蛋挞皮）（爆款推荐）", spec:"", price:146, boxCount:"360 个 ", purchasePrice:"0.405556 元 / 个 "},
+{index:475, name:"双倍酥皮蛋挞（蛋挞液）（爆款推荐）", spec:"", price:209, boxCount:"12 盒 ", purchasePrice:"17.416667 元 / 盒 "},
+{index:476, name:"椰蓉酥", spec:"", price:228, boxCount:"432 个 ", purchasePrice:"0.527778 元 / 个 "},
+{index:477, name:"毛毛虫（爆款推荐）", spec:"", price:136, boxCount:"20 个 ", purchasePrice:"6.8 元 / 个 "},
+{index:478, name:"黄金乳酪条（爆款推荐）", spec:"", price:252, boxCount:"72 个 ", purchasePrice:"3.5 元 / 个 "},
+{index:479, name:"黄油椰丝餐包", spec:"", price:100, boxCount:"75 个 ", purchasePrice:"1.333333 元 / 个 "},
+{index:480, name:"黄油老面包", spec:"", price:180, boxCount:"120 个 ", purchasePrice:"1.5 元 / 个 "},
+{index:481, name:"雪芙餐包", spec:"", price:156, boxCount:"120 个 ", purchasePrice:"1.3 元 / 个 "},
+{index:482, name:"咸芝士爆浆贝果（爆款推荐）", spec:"", price:459, boxCount:"135 个 ", purchasePrice:"3.4 元 / 个 "},
+{index:483, name:"巧克力爆浆贝果（爆款推荐）", spec:"", price:459, boxCount:"135 个 ", purchasePrice:"3.4 元 / 个 "},
+{index:484, name:"薏仁爆浆多谷物贝果（爆款推荐）", spec:"", price:392, boxCount:"135 个 ", purchasePrice:"2.903704 元 / 个 "},
+{index:485, name:"蔓越莓碱水贝果（爆款推荐）", spec:"", price:392, boxCount:"135 个 ", purchasePrice:"2.903704 元 / 个 "},
+{index:486, name:"开心果碱水棒", spec:"", price:582, boxCount:"153 个 ", purchasePrice:"3.803922 元 / 个 "},
+{index:487, name:"红豆碱水棒", spec:"", price:521, boxCount:"153 个 ", purchasePrice:"3.405229 元 / 个 "},
+{index:488, name:"奶酥碱水棒", spec:"", price:562, boxCount:"153 个 ", purchasePrice:"3.673203 元 / 个 "},
+{index:489, name:"生牛乳吐司", spec:"", price:144, boxCount:"8 个 ", purchasePrice:"18 元 / 个 "},
+{index:490, name:"全麦吐司", spec:"", price:160, boxCount:"8 个 ", purchasePrice:"20 元 / 个 "},
+{index:491, name:"陈皮吐司", spec:"", price:168, boxCount:"8 个 ", purchasePrice:"21 元 / 个 "},
+{index:492, name:"南瓜吐司", spec:"", price:138, boxCount:"8 个 ", purchasePrice:"17.25 元 / 个 "},
+{index:493, name:"丹麦小热狗（爆款推荐）", spec:"", price:210, boxCount:"84 个 ", purchasePrice:"2.5 元 / 个 "},
+{index:494, name:"原味麻薯（爆款推荐）", spec:"", price:211, boxCount:"240 个 ", purchasePrice:"0.879167 元 / 个 "},
+{index:495, name:"蔓越莓麻薯（爆款推荐）", spec:"", price:211, boxCount:"240 个 ", purchasePrice:"0.879167 元 / 个 "},
+{index:496, name:"糯米松松蛋糕", spec:"", price:464, boxCount:"40 盒 ", purchasePrice:"11.6 元 / 盒 "},
+{index:497, name:"水牛乳半熟芝士蛋糕（爆款推荐）", spec:"", price:500, boxCount:"30 盒 ", purchasePrice:"16.666667 元 / 盒 "},
+{index:498, name:"青柠芝士", spec:"", price:468, boxCount:"52 盒 ", purchasePrice:"9 元 / 盒 "},
+{index:499, name:"生巧熔岩蛋糕", spec:"", price:598, boxCount:"52 盒 ", purchasePrice:"11.5 元 / 盒 "},
+{index:500, name:"酸奶皮子蛋糕", spec:"", price:468, boxCount:"52 盒 ", purchasePrice:"9 元 / 盒 "},
+{index:501, name:"原味半熟芝士", spec:"", price:450, boxCount:"60 盒 ", purchasePrice:"7.5 元 / 盒 "},
+{index:502, name:"奥利奥半熟芝士（爆款推荐）", spec:"", price:510, boxCount:"60 盒 ", purchasePrice:"8.5 元 / 盒 "},
+{index:503, name:"牛乳爆焰蛋糕（草莓 + 巧克力）（爆款推荐）", spec:"", price:418, boxCount:"52 盒 ", purchasePrice:"8.038462 元 / 盒 "},
+{index:504, name:"芝士奶角包（爆款推荐）", spec:"", price:328, boxCount:"36 盒 ", purchasePrice:"9.111111 元 / 盒 "},
+{index:505, name:"可可夏威夷抱抱蛋糕", spec:"", price:358, boxCount:"36 盒 ", purchasePrice:"9.944444 元 / 盒 "},
+{index:506, name:"酸奶暖椰抱抱蛋糕", spec:"", price:342, boxCount:"36 盒 ", purchasePrice:"9.5 元 / 盒 "},
+{index:507, name:"牛乳舒芙蕾", spec:"", price:328, boxCount:"50 盒 ", purchasePrice:"6.56 元 / 盒 "},
+{index:508, name:"开心果舒芙蕾", spec:"", price:345, boxCount:"50 盒 ", purchasePrice:"6.9 元 / 盒 "},
+{index:509, name:"双拼瑞士卷（伯爵红茶 + 原味）（爆款推荐）", spec:"", price:204, boxCount:"24 盒 ", purchasePrice:"8.5 元 / 盒 "},
+{index:510, name:"双拼瑞士卷（红丝绒 + 巧克力）（爆款推荐）", spec:"", price:238, boxCount:"24 盒 ", purchasePrice:"9.916667 元 / 盒 "},
+{index:511, name:"香草味冰淇淋大福", spec:"", price:296, boxCount:"36 盒 ", purchasePrice:"8.222222 元 / 盒 "},
+{index:512, name:"开心果味冰淇淋大福", spec:"", price:296, boxCount:"36 盒 ", purchasePrice:"8.222222 元 / 盒 "},
+{index:513, name:"绿豆冰糕", spec:"", price:480, boxCount:"48 盒 ", purchasePrice:"10 元 / 盒 "},
+{index:514, name:"草莓绿豆冰糕", spec:"", price:567, boxCount:"48 盒 ", purchasePrice:"11.8125 元 / 盒 "},
+{index:515, name:"核桃拿破仑酥", spec:"", price:525, boxCount:"60 盒 ", purchasePrice:"8.75 元 / 盒 "},
+{index:516, name:"原味桃酥", spec:"", price:135, boxCount:"18 盒 ", purchasePrice:"7.5 元 / 盒 "},
+{index:517, name:"芝麻薄脆", spec:"", price:197, boxCount:"24 盒 ", purchasePrice:"8.208333 元 / 盒 "},
+{index:518, name:"牛乳曲奇", spec:"", price:258, boxCount:"24 盒 ", purchasePrice:"10.75 元 / 盒 "},
+{index:519, name:"芝士脆", spec:"", price:234, boxCount:"24 盒 ", purchasePrice:"9.75 元 / 盒 "},
+{index:520, name:"老手工脆脆卷（黄油味）", spec:"", price:177, boxCount:"24 盒 ", purchasePrice:"7.375 元 / 盒 "},
+{index:521, name:"老手工脆脆卷（山药芝麻味）", spec:"", price:177, boxCount:"24 盒 ", purchasePrice:"7.375 元 / 盒 "},
+{index:522, name:"蛋挞皮", spec:"", price:85, boxCount:"300 个 ", purchasePrice:"0.283333 元 / 个 "},
+{index:523, name:"蛋挞液", spec:"", price:135, boxCount:"12 盒 ", purchasePrice:"11.25 元 / 盒 "},
+{index:524, name:"酥皮蛋挞（胖东来同源工厂）", spec:"", price:106, boxCount:"108 个 ", purchasePrice:"0.981481 元 / 个 "},
+{index:525, name:"缤纷水果", spec:"", price:195, boxCount:"14 个 ", purchasePrice:"13.928571 元 / 个 "},
+{index:526, name:"缤纷水果", spec:"", price:195, boxCount:"20 个 ", purchasePrice:"9.75 元 / 个 "},
+{index:527, name:"奥尔良烤肉", spec:"", price:195, boxCount:"14 个 ", purchasePrice:"13.928571 元 / 个 "},
+{index:528, name:"奥尔良烤肉", spec:"", price:195, boxCount:"20 个 ", purchasePrice:"9.75 元 / 个 "},
+{index:529, name:"美式培根", spec:"", price:195, boxCount:"14 个 ", purchasePrice:"13.928571 元 / 个 "},
+{index:530, name:"美式培根", spec:"", price:195, boxCount:"20 个 ", purchasePrice:"9.75 元 / 个 "},
+{index:531, name:"超级至尊", spec:"", price:195, boxCount:"14 个 ", purchasePrice:"13.928571 元 / 个 "},
+{index:532, name:"超级至尊", spec:"", price:195, boxCount:"20 个 ", purchasePrice:"9.75 元 / 个 "},
+{index:533, name:"黑椒牛柳", spec:"", price:205, boxCount:"14 个 ", purchasePrice:"14.642857 元 / 个 "},
+{index:534, name:"黑椒牛柳", spec:"", price:205, boxCount:"20 个 ", purchasePrice:"10.25 元 / 个 "},
+{index:535, name:"榴莲披萨", spec:"", price:220, boxCount:"14 个 ", purchasePrice:"15.714286 元 / 个 "},
+{index:536, name:"榴莲披萨", spec:"", price:220, boxCount:"20 个 ", purchasePrice:"0 元 / 个 "},
+{index:537, name:"培根鲜虾", spec:"", price:205, boxCount:"14 个 ", purchasePrice:"14.642857 元 / 个 "},
+{index:538, name:"培根鲜虾", spec:"", price:205, boxCount:"20 个 ", purchasePrice:"10.25 元 / 个 "},
+{index:539, name:"缤纷水果", spec:"", price:222, boxCount:"8 个 ", purchasePrice:"27.75 元 / 个 "},
+{index:540, name:"美式培根", spec:"", price:255, boxCount:"8 个 ", purchasePrice:"31.875 元 / 个 "},
+{index:541, name:"鸡肉", spec:"", price:255, boxCount:"8 个 ", purchasePrice:"31.875 元 / 个 "},
+{index:542, name:"榴莲", spec:"", price:240, boxCount:"8 个 ", purchasePrice:"30 元 / 个 "},
+{index:543, name:"黑椒牛肉", spec:"", price:290, boxCount:"8 个 ", purchasePrice:"36.25 元 / 个 "},
+{index:544, name:"超级至尊", spec:"", price:290, boxCount:"8 个 ", purchasePrice:"36.25 元 / 个 "},
+{index:545, name:"15 寸意式薄脆披萨（鸡肉）", spec:"", price:198, boxCount:"6 片 ", purchasePrice:"33 元 / 片 "},
+{index:546, name:"15 寸意式薄脆披萨（培根）", spec:"", price:198, boxCount:"6 片 ", purchasePrice:"33 元 / 片 "},
+{index:547, name:"15 寸意式薄脆披萨（水果）", spec:"", price:198, boxCount:"6 片 ", purchasePrice:"33 元 / 片 "},
+{index:548, name:"15 寸意式薄脆披萨（至尊）", spec:"", price:198, boxCount:"6 片 ", purchasePrice:"33 元 / 片 "},
+{index:549, name:"15 寸意式薄脆披萨（榴莲）", spec:"", price:248, boxCount:"6 片 ", purchasePrice:"41.333333 元 / 片 "},
+        ];
+
+        // 存储已选产品的数组
+        let selectedProducts = [];
+
+        // 渲染表格数据
+        function renderTable(data) {
+            const tbody = document.getElementById('productTableBody');
+            tbody.innerHTML = '';
+            
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                const selectedItem = selectedProducts.find(p => p.index === item.index);
+                const isSelected = !!selectedItem;
+                const quantity = selectedItem ? selectedItem.quantity : 1;
+                const remark = selectedItem ? selectedItem.remark : '';
+                
+                tr.innerHTML = `
+                    <td class="checkbox-cell">
+                        <input type="checkbox" class="product-checkbox" 
+                               id="checkbox-${item.index}" 
+                               onchange="toggleProduct(${item.index})"
+                               ${isSelected ? 'checked' : ''}>
+                    </td>
+                    <td>${item.index}</td>
+                    <td>${item.name}</td>
+                    <td>${item.spec}</td>
+                    <td>${item.price}</td>
+                    <td>${item.boxCount}</td>
+                    <td>${item.purchasePrice}</td>
+                    <td class="quantity-cell">
+                        <div class="quantity-wrapper">
+                            <button class="quantity-btn" id="minus-${item.index}" 
+                                    onclick="changeQuantity(${item.index}, -1)" 
+                                    ${!isSelected ? 'disabled' : ''}>-</button>
+                            <input type="number" class="quantity-input" id="quantity-${item.index}" 
+                                   value="${quantity}" min="1" max="999" 
+                                   onchange="updateQuantity(${item.index})"
+                                   ${!isSelected ? 'disabled' : ''}>
+                            <button class="quantity-btn" id="plus-${item.index}" 
+                                    onclick="changeQuantity(${item.index}, 1)" 
+                                    ${!isSelected ? 'disabled' : ''}>+</button>
+                        </div>
+                    </td>
+                    <td class="remark-cell">
+                        <input type="text" class="remark-input" id="remark-${item.index}" 
+                               placeholder="输入备注（选填）" value="${remark}"
+                               onchange="updateRemark(${item.index})"
+                               ${!isSelected ? 'disabled' : ''}>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            updateListEmptyState();
+        }
+
+        // 切换产品选中状态
+        function toggleProduct(index) {
+            const product = productData.find(p => p.index === index);
+            const checkbox = document.getElementById(`checkbox-${index}`);
+            const quantityInput = document.getElementById(`quantity-${index}`);
+            const minusBtn = document.getElementById(`minus-${index}`);
+            const plusBtn = document.getElementById(`plus-${index}`);
+            const remarkInput = document.getElementById(`remark-${index}`);
+            
+            if (checkbox.checked) {
+                quantityInput.disabled = false;
+                minusBtn.disabled = false;
+                plusBtn.disabled = false;
+                remarkInput.disabled = false;
+                if (!selectedProducts.some(p => p.index === index)) {
+                    selectedProducts.push({
+                        ...product,
+                        quantity: 1,
+                        remark: ''
+                    });
+                }
+            } else {
+                quantityInput.disabled = true;
+                minusBtn.disabled = true;
+                plusBtn.disabled = true;
+                remarkInput.disabled = true;
+                selectedProducts = selectedProducts.filter(p => p.index !== index);
+            }
+            renderSelectionList();
+        }
+
+        // 表格数量调整（+/-按钮）
+        function changeQuantity(index, change) {
+            const quantityInput = document.getElementById(`quantity-${index}`);
+            let newQuantity = parseInt(quantityInput.value) + change;
+            newQuantity = Math.max(1, Math.min(999, newQuantity));
+            quantityInput.value = newQuantity;
+            updateQuantity(index);
+        }
+
+        // 表格数量更新（手动输入）
+        function updateQuantity(index) {
+            const quantityInput = document.getElementById(`quantity-${index}`);
+            let quantity = parseInt(quantityInput.value);
+            
+            if (isNaN(quantity) || quantity < 1) {
+                quantity = 1;
+                quantityInput.value = 1;
+            } else if (quantity > 999) {
+                quantity = 999;
+                quantityInput.value = 999;
+            }
+            
+            const selectedIndex = selectedProducts.findIndex(p => p.index === index);
+            if (selectedIndex !== -1) {
+                selectedProducts[selectedIndex].quantity = quantity;
+                renderSelectionList(); // 同步更新清单
+            }
+        }
+
+        // 清单数量调整（+/-按钮）
+        function changeListQuantity(index, change) {
+            const quantityInput = document.getElementById(`list-quantity-${index}`);
+            let newQuantity = parseInt(quantityInput.value) + change;
+            newQuantity = Math.max(1, Math.min(999, newQuantity));
+            quantityInput.value = newQuantity;
+            updateListQuantity(index);
+        }
+
+        // 清单数量更新（手动输入）
+        function updateListQuantity(index) {
+            const quantityInput = document.getElementById(`list-quantity-${index}`);
+            let quantity = parseInt(quantityInput.value);
+            
+            if (isNaN(quantity) || quantity < 1) {
+                quantity = 1;
+                quantityInput.value = 1;
+            } else if (quantity > 999) {
+                quantity = 999;
+                quantityInput.value = 999;
+            }
+            
+            // 更新选中产品数组
+            const selectedIndex = selectedProducts.findIndex(p => p.index === index);
+            if (selectedIndex !== -1) {
+                selectedProducts[selectedIndex].quantity = quantity;
+                // 同步更新表格数量
+                const tableQuantityInput = document.getElementById(`quantity-${index}`);
+                if (tableQuantityInput) {
+                    tableQuantityInput.value = quantity;
+                }
+                renderSelectionList(); // 重新渲染清单计算金额
+            }
+        }
+
+        // 更新备注
+        function updateRemark(index) {
+            const remarkInput = document.getElementById(`remark-${index}`);
+            const remark = remarkInput.value.trim();
+            
+            const selectedIndex = selectedProducts.findIndex(p => p.index === index);
+            if (selectedIndex !== -1) {
+                selectedProducts[selectedIndex].remark = remark;
+                renderSelectionList();
+            }
+        }
+
+        // 渲染选品清单（核心修改：备注位置+清单数量可改）
+        function renderSelectionList() {
+            const listItems = document.getElementById('listItems');
+            const listTotal = document.getElementById('listTotal');
+            listItems.innerHTML = '';
+            
+            let total = 0;
+            
+            if (selectedProducts.length > 0) {
+                selectedProducts.forEach(product => {
+                    const subtotal = product.price * product.quantity;
+                    total += subtotal;
+                    
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    // 备注HTML - 移至产品名称后，样式更显著
+                    const remarkHtml = product.remark ? `<span class="product-remark">【${product.remark}】</span>` : '';
+                    
+                    item.innerHTML = `
+                        <div class="product-basic">
+                            <div class="product-name">
+                                ${product.name} ${remarkHtml}
+                            </div>
+                            <div class="product-spec">规格：${product.spec}</div>
+                        </div>
+                        <div class="product-details">
+                            <div class="detail-item"><span class="detail-label">单价：</span>¥${product.price}/箱</div>
+                            <div class="detail-item"><span class="detail-label">数量/箱：</span>${product.boxCount}</div>
+                            <div class="detail-item"><span class="detail-label">进价：</span>${product.purchasePrice}</div>
+                            <div class="detail-item">
+                                <span class="detail-label">选购数量：</span>
+                                <div class="list-quantity-wrapper">
+                                    <button class="list-quantity-btn" onclick="changeListQuantity(${product.index}, -1)">-</button>
+                                    <input type="number" class="list-quantity-input" id="list-quantity-${product.index}" 
+                                           value="${product.quantity}" min="1" max="999" 
+                                           onchange="updateListQuantity(${product.index})">
+                                    <button class="list-quantity-btn" onclick="changeListQuantity(${product.index}, 1)">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="product-actions">
+                            <div class="product-subtotal">小计：¥${subtotal.toFixed(2)}</div>
+                            <button class="delete-btn" onclick="removeProduct(${product.index})">删除</button>
+                        </div>
+                    `;
+                    listItems.appendChild(item);
+                });
+            }
+            
+            listTotal.textContent = `合计金额：¥${total.toFixed(2)}`;
+            updateListEmptyState();
+        }
+
+        // 移除单个产品
+        function removeProduct(index) {
+            const checkbox = document.getElementById(`checkbox-${index}`);
+            const quantityInput = document.getElementById(`quantity-${index}`);
+            const minusBtn = document.getElementById(`minus-${index}`);
+            const plusBtn = document.getElementById(`plus-${index}`);
+            const remarkInput = document.getElementById(`remark-${index}`);
+            
+            if (checkbox) {
+                checkbox.checked = false;
+                quantityInput.disabled = true;
+                minusBtn.disabled = true;
+                plusBtn.disabled = true;
+                remarkInput.disabled = true;
+                remarkInput.value = '';
+            }
+            selectedProducts = selectedProducts.filter(p => p.index !== index);
+            renderSelectionList();
+        }
+
+        // 清空清单
+        function clearSelection() {
+            if (selectedProducts.length === 0) return;
+            
+            if (confirm('确定要清空所有已选产品吗？')) {
+                document.querySelectorAll('.product-checkbox').forEach(checkbox => {
+                    const index = parseInt(checkbox.id.replace('checkbox-', ''));
+                    checkbox.checked = false;
+                    
+                    const quantityInput = document.getElementById(`quantity-${index}`);
+                    const minusBtn = document.getElementById(`minus-${index}`);
+                    const plusBtn = document.getElementById(`plus-${index}`);
+                    const remarkInput = document.getElementById(`remark-${index}`);
+                    
+                    if (quantityInput) quantityInput.disabled = true;
+                    if (minusBtn) minusBtn.disabled = true;
+                    if (plusBtn) plusBtn.disabled = true;
+                    if (remarkInput) {
+                        remarkInput.disabled = true;
+                        remarkInput.value = '';
+                    }
+                });
+                selectedProducts = [];
+                renderSelectionList();
+            }
+        }
+
+        // 更新清单空状态显示
+        function updateListEmptyState() {
+            const listEmpty = document.getElementById('listEmpty');
+            const listItems = document.getElementById('listItems');
+            const listTotal = document.getElementById('listTotal');
+            
+            if (selectedProducts.length === 0) {
+                listEmpty.style.display = 'block';
+                listItems.style.display = 'none';
+                listTotal.style.display = 'none';
+            } else {
+                listEmpty.style.display = 'none';
+                listItems.style.display = 'flex';
+                listTotal.style.display = 'block';
+            }
+        }
+
+        // 排序表格
+        function sortTable() {
+            const sortType = document.getElementById('sortSelect').value;
+            let sortedData = [...productData];
+            
+            switch(sortType) {
+                case 'price-asc':
+                    sortedData.sort((a, b) => a.price - b.price);
+                    break;
+                case 'price-desc':
+                    sortedData.sort((a, b) => b.price - a.price);
+                    break;
+                case 'index':
+                default:
+                    sortedData.sort((a, b) => a.index - b.index);
+                    break;
+            }
+            renderTable(sortedData);
+        }
+
+        // 初始化
+        window.onload = function() {
+            renderTable(productData);
+            
+            // 搜索事件
+            document.getElementById('searchInput').addEventListener('input', function() {
+                const keyword = this.value.trim().toLowerCase();
+                if (!keyword) {
+                    renderTable(productData);
+                    return;
+                }
+                const filteredData = productData.filter(item => 
+                    item.name.toLowerCase().includes(keyword) || 
+                    item.spec.toLowerCase().includes(keyword)
+                );
+                renderTable(filteredData);
+            });
+
+            renderSelectionList();
+        }
+    </script>
+</body>
+</html>
